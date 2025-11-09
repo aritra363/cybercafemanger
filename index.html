@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en" data-theme="ocean-light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cyber Manager</title>
+  <link rel="icon" href="./public/assets/logo.svg" />
+
+  <!-- Tailwind v3 (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: {} } }
+  </script>
+
+  <!-- Theme variables (plain CSS, no @apply) -->
+  <link rel="stylesheet" href="./public/styles/theme.css" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- SheetJS for .xlsx exports -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body class="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+  <!-- Mobile header -->
+  <header class="md:hidden sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--card)]">
+    <div class="flex items-center justify-between px-4 h-12">
+      <button id="btnMobileNav" class="p-2 rounded-lg hover:bg-[var(--muted)]"><i data-lucide="menu"></i></button>
+      <div class="flex items-center gap-2">
+        <img src="./assets/logo.svg" class="w-5 h-5" alt=""/>
+        <span class="font-semibold">Cyber Manager</span>
+      </div>
+      <div class="w-8"></div>
+    </div>
+  </header>
+
+  <div class="flex">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 shrink-0 h-[calc(100vh-0px)] md:h-screen border-r border-[var(--border)] bg-[var(--card)] fixed md:static -translate-x-full md:translate-x-0 transition-transform duration-200 z-40">
+      <div class="p-4 flex items-center gap-2 border-b border-[var(--border)]">
+        <img src="./assets/logo.svg" class="w-6 h-6" alt=""/>
+        <span class="font-semibold">Cyber Manager</span>
+      </div>
+      <nav class="p-2 space-y-1">
+        <button data-route="dashboard" class="navlink w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--muted)]"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
+        <button data-route="pos" class="navlink w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--muted)]"><i data-lucide="shopping-cart"></i><span>Point of Sale</span></button>
+        <button data-route="inventory" class="navlink w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--muted)]"><i data-lucide="boxes"></i><span>Inventory</span></button>
+        <button data-route="sales" class="navlink w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--muted)]"><i data-lucide="receipt"></i><span>Sales History</span></button>
+        <button data-route="expenses" class="navlink w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--muted)]"><i data-lucide="wallet"></i><span>Expenses</span></button>
+      </nav>
+
+      <div class="mt-auto p-3 space-y-3">
+        <!-- Theme selector (6 themes incl. dark/light) -->
+        <div>
+          <div class="text-xs mb-2 opacity-70">Theme</div>
+          <div class="grid grid-cols-3 gap-2">
+            <button class="theme-btn" data-theme="ocean-light">Ocean L</button>
+            <button class="theme-btn" data-theme="ocean-dark">Ocean D</button>
+            <button class="theme-btn" data-theme="emerald">Emerald</button>
+            <button class="theme-btn" data-theme="sunset">Sunset</button>
+            <button class="theme-btn" data-theme="violet">Violet</button>
+            <button class="theme-btn" data-theme="slate">Slate</button>
+          </div>
+        </div>
+        <div class="text-xs text-[var(--muted-foreground)]">v1.0 — Built for Indian Cyber Cafes</div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="md:ml-64 w-full">
+      <div id="view" class="p-4 md:p-6"></div>
+    </main>
+  </div>
+
+  <!-- Toasts & Modals root -->
+  <div id="modal-root"></div>
+  <div id="toast-root" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+
+  <!-- App scripts (order matters) -->
+  <script src="./public/js/firebase-config.js"></script>
+  <script src="./public/js/firebase.js"></script>
+  <script src="./public/js/utils.js"></script>
+  <script src="./public/js/state.js"></script>
+  <script src="./public/js/export.js"></script>
+  <script src="./public/js/charts.js"></script>
+  <script src="./public/js/db.js"></script>
+  <script src="./public/js/ui.js"></script>
+  <script src="./public/js/dashboard.js"></script>
+  <script src="./public/js/pos.js"></script>
+  <script src="./public/js/inventory.js"></script>
+  <script src="./public/js/sales.js"></script>
+  <script src="./public/js/expenses.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      window.CM.UI.init();
+      window.CM.Router.go('dashboard');
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

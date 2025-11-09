@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // WARNING: This is wide open to enable all PRD functionality without auth.
+    // For production, lock this down (e.g., require auth). For now, allow all.
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
