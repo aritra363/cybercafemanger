@@ -51,11 +51,19 @@ CM.Views.Dashboard.render = async function() {
     const showCustom = range==='custom';
     document.getElementById('fromDate').classList.toggle('hidden', !showCustom);
     document.getElementById('toDate').classList.toggle('hidden', !showCustom);
+    
+    // Update button styling
+    root.querySelectorAll('[data-range]').forEach(b => {
+      const isActive = b.dataset.range === range;
+      b.classList.toggle('ring-2', isActive);
+      b.classList.toggle('ring-[var(--primary)]', isActive);
+    });
   };
   applyRangeUI();
 
   root.querySelectorAll('[data-range]').forEach(b => b.addEventListener('click', async () => {
-    CM.State.filters.dashboard.range = b.dataset.range; applyRangeUI();
+    CM.State.filters.dashboard.range = b.dataset.range;
+    applyRangeUI();
     await refresh();
   }));
 
@@ -63,7 +71,12 @@ CM.Views.Dashboard.render = async function() {
   document.getElementById('toDate').addEventListener('change', refresh);
 
   document.getElementById('btnExport').addEventListener('click', () => {
-    CM.exporter.toXlsx(`dashboard_${Date.now()}.xlsx`, dashboardExportRows);
+    try {
+      CM.exporter.toXlsx(`dashboard_${Date.now()}.xlsx`, dashboardExportRows);
+      CM.UI.toast('Dashboard exported successfully', 'success', 'Export Complete');
+    } catch (err) {
+      CM.UI.toast('Failed to export dashboard data', 'error', 'Export Failed');
+    }
   });
 
   let dashboardExportRows = [];

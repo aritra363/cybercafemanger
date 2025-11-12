@@ -63,26 +63,41 @@ CM.Views.POS.render = async function() {
   document.getElementById('searchItem').addEventListener('input', (e)=> renderInventory(e.target.value));
 
   document.getElementById('btnAddItem').addEventListener('click', () => {
-    if (!selectedId) return CM.UI.toast('Select an item');
+    if (!selectedId) {
+      CM.UI.toast('Please select an item from the list', 'warning', 'No Item Selected');
+      return;
+    }
     const item = inventory.find(i=>i.id===selectedId);
     const qty = Math.max(1, Number(document.getElementById('qty').value||1));
-    if (qty > item.stock) return CM.UI.toast('Quantity exceeds stock', 'error');
+    if (qty > item.stock) {
+      CM.UI.toast(`Only ${item.stock} units available in stock`, 'error', 'Insufficient Stock');
+      return;
+    }
     // push/update cart line
     const existing = cart.items.find(i=>i.type==='item' && i.id===item.id);
     if (existing) existing.quantity += qty; else cart.items.push({ type:'item', id:item.id, name:item.name, price:item.sellingPrice, quantity:qty, purchasePrice:item.purchasePrice });
+    CM.UI.toast(`${item.name} x${qty} added to cart`, 'success', 'Item Added');
     renderCart();
   });
 
   document.getElementById('btnAddSvc').addEventListener('click', () => {
     const name = document.getElementById('svcName').value.trim();
     const price = Number(document.getElementById('svcPrice').value);
-    if (!name || !Number.isFinite(price) || price<0) return CM.UI.toast('Enter valid service name & price','error');
+    if (!name || !Number.isFinite(price) || price<0) {
+      CM.UI.toast('Enter a valid service name and price', 'error', 'Validation Error');
+      return;
+    }
     cart.items.push({ type:'service', id:`svc_${Date.now()}`, name, price, quantity:1 });
+    CM.UI.toast(`${name} service added to cart`, 'success', 'Service Added');
     document.getElementById('svcName').value=''; document.getElementById('svcPrice').value='';
     renderCart();
   });
 
-  document.getElementById('btnClear').addEventListener('click', () => { cart.items=[]; renderCart(); });
+  document.getElementById('btnClear').addEventListener('click', () => {
+    cart.items=[];
+    CM.UI.toast('Cart cleared', 'info', 'Cart Cleared');
+    renderCart();
+  });
 
   function renderCart(){
     const list = document.getElementById('cartList');
@@ -106,7 +121,11 @@ CM.Views.POS.render = async function() {
 
     // attach edits/removes
     list.querySelectorAll('[data-remove]').forEach(b => b.addEventListener('click', () => {
-      const i = Number(b.dataset.remove); cart.items.splice(i,1); renderCart();
+      const i = Number(b.dataset.remove);
+      const itemName = cart.items[i].name;
+      cart.items.splice(i,1);
+      CM.UI.toast(`${itemName} removed from cart`, 'success', 'Item Removed');
+      renderCart();
     }));
     list.querySelectorAll('input[data-field]').forEach(inp => inp.addEventListener('change', () => {
       const i = Number(inp.dataset.idx); const f = inp.dataset.field; const val = Number(inp.value);
@@ -114,7 +133,11 @@ CM.Views.POS.render = async function() {
       // If item and editing quantity, ensure stock
       if (f==='quantity' && cart.items[i].type==='item') {
         const inv = inventory.find(x=>x.id===cart.items[i].id);
-        if (val > inv.stock) { CM.UI.toast('Qty exceeds stock','error'); inp.value=cart.items[i].quantity; return; }
+        if (val > inv.stock) {
+          CM.UI.toast(`Only ${inv.stock} units available in stock`, 'error', 'Stock Limit');
+          inp.value=cart.items[i].quantity;
+          return;
+        }
       }
       cart.items[i][f] = f==='quantity'? Math.max(1, val) : val;
       renderCart();
@@ -126,7 +149,10 @@ CM.Views.POS.render = async function() {
   renderCart();
 
   document.getElementById('btnComplete').addEventListener('click', async () => {
-    if (!cart.items.length) return CM.UI.toast('Cart empty','error');
+    if (!cart.items.length) {
+      CM.UI.toast('Please add items to cart before completing sale', 'warning', 'Empty Cart');
+      return;
+    }
 
     // Build sale doc
     const now = new Date();
@@ -140,9 +166,10 @@ CM.Views.POS.render = async function() {
       await CM.DB.addSale({ date: now, totalAmount, totalCost, items }, itemDeltas);
       cart.items = [];
       renderCart();
-      CM.UI.toast('Sale completed');
+      CM.UI.toast(`Sale completed - Total: ${CM.utils.fmtINR(totalAmount)}`, 'success', 'Sale Complete');
     } catch (e) {
-      console.error(e); CM.UI.toast('Could not save sale','error');
+      console.error(e);
+      CM.UI.toast('Failed to save sale. Please try again', 'error', 'Save Failed');
     }
   });
 };

@@ -27,14 +27,23 @@ CM.utils = (() => {
   const confirm = async (title, message) => new Promise((resolve) => {
     const root = document.getElementById('modal-root');
     const modal = el(`<div class="modal-backdrop">
-      <div class="modal">
-        <header><h3 class="font-semibold">${title}</h3><button class="icon-btn" id="xClose"><i data-lucide="x"></i></button></header>
-        <div class="body">${message}</div>
+      <div class="modal" style="max-width: 400px;">
+        <header>
+          <h3>${title}</h3>
+          <button class="icon-btn" id="xClose"><i data-lucide="x"></i></button>
+        </header>
+        <div class="body">
+          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <div style="font-size: 2rem; color: var(--danger);">⚠️</div>
+            <div style="flex: 1; color: var(--muted-foreground);">${message}</div>
+          </div>
+        </div>
         <footer>
           <button class="btn btn-soft" id="btnCancel">Cancel</button>
-          <button class="btn btn-danger" id="btnOk">Delete</button>
+          <button class="btn btn-danger" id="btnOk"><i data-lucide="trash-2"></i>Delete</button>
         </footer>
-      </div></div>`);
+      </div>
+    </div>`);
     root.appendChild(modal);
     lucide.createIcons();
     modal.querySelector('#xClose').onclick = () => { root.removeChild(modal); resolve(false); };

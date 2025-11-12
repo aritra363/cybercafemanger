@@ -29,10 +29,21 @@ CM.Views.Expenses.render = async function() {
     const show = state.range==='custom';
     document.getElementById('fromDate').classList.toggle('hidden', !show);
     document.getElementById('toDate').classList.toggle('hidden', !show);
+    
+    // Update button styling
+    root.querySelectorAll('[data-range]').forEach(b => {
+      const isActive = b.dataset.range === state.range;
+      b.classList.toggle('ring-2', isActive);
+      b.classList.toggle('ring-[var(--primary)]', isActive);
+    });
   };
   applyRangeUI();
 
-  root.querySelectorAll('[data-range]').forEach(b => b.addEventListener('click', async ()=>{ state.range = b.dataset.range; applyRangeUI(); await refresh(); }));
+  root.querySelectorAll('[data-range]').forEach(b => b.addEventListener('click', async ()=>{ 
+    state.range = b.dataset.range;
+    applyRangeUI();
+    await refresh();
+  }));
   document.getElementById('fromDate').addEventListener('change', refresh);
   document.getElementById('toDate').addEventListener('change', refresh);
 
@@ -60,34 +71,82 @@ CM.Views.Expenses.render = async function() {
   // Add
   document.getElementById('btnAdd').addEventListener('click', ()=>{
     const modal = CM.utils.el(`<div class="modal-backdrop"><div class="modal">
-      <header><h3 class="font-semibold">Add Expense</h3><button class="icon-btn" id="xClose"><i data-lucide="x"></i></button></header>
-      <div class="body grid grid-cols-1 md:grid-cols-3 gap-2">
-        <input id="date" type="date" class="input"/>
-        <input id="desc" class="input" placeholder="Description"/>
-        <input id="amt" type="number" min="0" class="input" placeholder="Amount"/>
+      <header><h3>Record New Expense</h3><button class="icon-btn" id="xClose"><i data-lucide="x"></i></button></header>
+      <div class="body">
+        <div class="space-y-4">
+          <div>
+            <label>Date</label>
+            <input id="date" type="date" class="input"/>
+          </div>
+          <div>
+            <label>Description</label>
+            <input id="desc" class="input" placeholder="e.g., Office supplies, Rent, etc."/>
+          </div>
+          <div>
+            <label>Amount (₹)</label>
+            <input id="amt" type="number" min="0" step="0.01" class="input" placeholder="Enter amount"/>
+          </div>
+        </div>
       </div>
       <footer>
         <button class="btn btn-soft" id="btnCancel">Cancel</button>
-        <button class="btn btn-primary" id="btnSave">Save</button>
+        <button class="btn btn-primary" id="btnSave"><i data-lucide="save"></i>Add Expense</button>
       </footer>
     </div></div>`);
     document.getElementById('modal-root').appendChild(modal);
     lucide.createIcons();
     const close=()=> document.getElementById('modal-root').removeChild(modal);
-    modal.querySelector('#xClose').onclick=close; modal.querySelector('#btnCancel').onclick=close;
+    modal.querySelector('#xClose').onclick=close;
+    modal.querySelector('#btnCancel').onclick=close;
+    
+    // Handle Enter key to submit form
+    const handleEnter = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        modal.querySelector('#btnSave').click();
+      }
+    };
+    modal.querySelectorAll('.input').forEach(input => {
+      input.addEventListener('keypress', handleEnter);
+    });
+    
     modal.querySelector('#btnSave').onclick = async ()=>{
       const dateStr = modal.querySelector('#date').value; const description = modal.querySelector('#desc').value.trim(); const amount = Number(modal.querySelector('#amt').value);
-      if (!dateStr || !description || !Number.isFinite(amount) || amount<0) return CM.UI.toast('Fill all fields','error');
-      await CM.DB.addExpense({ date:new Date(dateStr), description, amount });
-      close(); CM.UI.toast('Expense added'); await refresh();
+      if (!dateStr || !description || !Number.isFinite(amount) || amount<0) {
+        CM.UI.toast('Please fill all fields correctly', 'error', 'Validation Error');
+        return;
+      }
+      try {
+        await CM.DB.addExpense({ date:new Date(dateStr), description, amount });
+        close();
+        CM.UI.toast('Expense added successfully', 'success', 'Expense Created');
+        await refresh();
+      } catch (err) {
+        CM.UI.toast('Failed to add expense', 'error', 'Add Failed');
+      }
     };
   });
 
   // Delete
   root.addEventListener('click', async (e)=>{
     const id = e.target.closest('[data-del]')?.dataset.del; if (!id) return;
-    if (await CM.utils.confirm('Delete expense','This will remove the expense.')) { await CM.DB.deleteExpense(id); await refresh(); CM.UI.toast('Deleted'); }
+    if (await CM.utils.confirm('Delete expense','This will remove the expense.')) {
+      try {
+        await CM.DB.deleteExpense(id);
+        CM.UI.toast('Expense deleted successfully', 'success', 'Deleted');
+        await refresh();
+      } catch (err) {
+        CM.UI.toast('Failed to delete expense', 'error', 'Delete Failed');
+      }
+    }
   });
 
-  document.getElementById('btnExport').addEventListener('click', ()=> CM.exporter.toXlsx('expenses.xlsx', exportRows));
+  document.getElementById('btnExport').addEventListener('click', ()=> {
+    try {
+      CM.exporter.toXlsx('expenses.xlsx', exportRows);
+      CM.UI.toast('Expenses exported successfully', 'success', 'Export Complete');
+    } catch (err) {
+      CM.UI.toast('Failed to export expenses', 'error', 'Export Failed');
+    }
+  });
 };

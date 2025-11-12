@@ -4,31 +4,26 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cyber Manager</title>
-  <link rel="icon" href="./public/assets/logo.svg" />
+  <link rel="icon" href="./assets/logo.svg" />
 
-  <!-- Tailwind v3 (CDN) -->
+  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = { theme: { extend: {} } }
-  </script>
 
-  <!-- Theme variables (plain CSS, no @apply) -->
-  <link rel="stylesheet" href="./public/styles/theme.css" />
+  <!-- Theme CSS -->
+  <link rel="stylesheet" href="./styles/theme.css" />
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
-  <!-- Lucide Icons -->
+  <!-- Lucide icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- SheetJS for .xlsx exports -->
+  <!-- SheetJS -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="min-h-screen bg-[var(--bg)] text-[var(--text)]">
   <!-- Mobile header -->
-  <header class="md:hidden sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--card)]">
+  <header class="md:hidden sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--card)]">
     <div class="flex items-center justify-between px-4 h-12">
-      <button id="btnMobileNav" class="p-2 rounded-lg hover:bg-[var(--muted)]"><i data-lucide="menu"></i></button>
+      <button id="btnMobileNav" class="p-2 rounded-lg hover:bg-[var(--muted)]" aria-label="Open menu"><i data-lucide="menu"></i></button>
       <div class="flex items-center gap-2">
         <img src="./assets/logo.svg" class="w-5 h-5" alt=""/>
         <span class="font-semibold">Cyber Manager</span>
@@ -37,14 +32,17 @@
     </div>
   </header>
 
-  <div class="flex">
+  <!-- Root flex: sidebar + main. On md+ the sidebar is static in flow; on mobile sidebar will be fixed overlay via CSS/JS -->
+  <div id="root">
     <!-- Sidebar -->
-    <aside id="sidebar" class="w-64 shrink-0 h-[calc(100vh-0px)] md:h-screen border-r border-[var(--border)] bg-[var(--card)] fixed md:static -translate-x-full md:translate-x-0 transition-transform duration-200 z-40">
+    <aside id="sidebar"
+      class="w-64 bg-[var(--card)] border-r border-[var(--border)] -translate-x-full transition-transform duration-200">
       <div class="p-4 flex items-center gap-2 border-b border-[var(--border)]">
         <img src="./assets/logo.svg" class="w-6 h-6" alt=""/>
         <span class="font-semibold">Cyber Manager</span>
       </div>
-      <nav class="p-2 space-y-1">
+
+      <nav class="p-3 space-y-1">
         <button data-route="dashboard" class="navlink w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--muted)]"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
         <button data-route="pos" class="navlink w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--muted)]"><i data-lucide="shopping-cart"></i><span>Point of Sale</span></button>
         <button data-route="inventory" class="navlink w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--muted)]"><i data-lucide="boxes"></i><span>Inventory</span></button>
@@ -53,7 +51,6 @@
       </nav>
 
       <div class="mt-auto p-3 space-y-3">
-        <!-- Theme selector (6 themes incl. dark/light) -->
         <div>
           <div class="text-xs mb-2 opacity-70">Theme</div>
           <div class="grid grid-cols-3 gap-2">
@@ -62,42 +59,47 @@
             <button class="theme-btn" data-theme="emerald">Emerald</button>
             <button class="theme-btn" data-theme="sunset">Sunset</button>
             <button class="theme-btn" data-theme="violet">Violet</button>
-            <button class="theme-btn" data-theme="slate">Slate</button>
+            <button class="theme-btn" data-theme="slate">Neon</button>
           </div>
         </div>
         <div class="text-xs text-[var(--muted-foreground)]">v1.0 — Built for Indian Cyber Cafes</div>
       </div>
     </aside>
 
-    <!-- Main content -->
-    <main class="md:ml-64 w-full">
-      <div id="view" class="p-4 md:p-6"></div>
+    <!-- Backdrop used only on mobile overlay -->
+    <div id="backdrop" class="hidden"></div>
+
+    <!-- Main: flex-1 so it fills remaining width when sidebar is in flow (md+) -->
+    <main id="main">
+      <div id="view-container" class="max-w-6xl mx-auto px-4 md:px-6 py-6">
+        <div id="view"></div>
+      </div>
     </main>
   </div>
 
-  <!-- Toasts & Modals root -->
+  <!-- Modals & toasts -->
   <div id="modal-root"></div>
   <div id="toast-root" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
 
-  <!-- App scripts (order matters) -->
-  <script src="./public/js/firebase-config.js"></script>
-  <script src="./public/js/firebase.js"></script>
-  <script src="./public/js/utils.js"></script>
-  <script src="./public/js/state.js"></script>
-  <script src="./public/js/export.js"></script>
-  <script src="./public/js/charts.js"></script>
-  <script src="./public/js/db.js"></script>
-  <script src="./public/js/ui.js"></script>
-  <script src="./public/js/dashboard.js"></script>
-  <script src="./public/js/pos.js"></script>
-  <script src="./public/js/inventory.js"></script>
-  <script src="./public/js/sales.js"></script>
-  <script src="./public/js/expenses.js"></script>
+  <!-- Scripts -->
+  <script src="./js/firebase-config.js"></script>
+  <script src="./js/firebase.js"></script>
+  <script src="./js/utils.js"></script>
+  <script src="./js/state.js"></script>
+  <script src="./js/export.js"></script>
+  <script src="./js/charts.js"></script>
+  <script src="./js/db.js"></script>
+  <script src="./js/ui.js"></script>
+  <script src="./js/dashboard.js"></script>
+  <script src="./js/pos.js"></script>
+  <script src="./js/inventory.js"></script>
+  <script src="./js/sales.js"></script>
+  <script src="./js/expenses.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       window.CM.UI.init();
       window.CM.Router.go('dashboard');
-      lucide.createIcons();
+      if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
     });
   </script>
 </body>

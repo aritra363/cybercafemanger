@@ -29,11 +29,20 @@ CM.Views.Sales.render = async function() {
     const show = state.range==='custom';
     document.getElementById('fromDate').classList.toggle('hidden', !show);
     document.getElementById('toDate').classList.toggle('hidden', !show);
+    
+    // Update button styling
+    root.querySelectorAll('[data-range]').forEach(b => {
+      const isActive = b.dataset.range === state.range;
+      b.classList.toggle('ring-2', isActive);
+      b.classList.toggle('ring-[var(--primary)]', isActive);
+    });
   };
   applyRangeUI();
 
   root.querySelectorAll('[data-range]').forEach(b => b.addEventListener('click', async ()=>{
-    state.range = b.dataset.range; applyRangeUI(); await refresh();
+    state.range = b.dataset.range;
+    applyRangeUI();
+    await refresh();
   }));
   document.getElementById('fromDate').addEventListener('change', refresh);
   document.getElementById('toDate').addEventListener('change', refresh);
@@ -66,5 +75,12 @@ CM.Views.Sales.render = async function() {
 
   await refresh();
 
-  document.getElementById('btnExport').addEventListener('click', ()=> CM.exporter.toXlsx('sales.xlsx', exportRows));
+  document.getElementById('btnExport').addEventListener('click', ()=> {
+    try {
+      CM.exporter.toXlsx('sales.xlsx', exportRows);
+      CM.UI.toast('Sales data exported successfully', 'success', 'Export Complete');
+    } catch (err) {
+      CM.UI.toast('Failed to export sales data', 'error', 'Export Failed');
+    }
+  });
 };
