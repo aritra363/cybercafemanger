@@ -124,6 +124,7 @@ html[data-theme="slate"]{ --bg:#1a0a1f; --card:#2d1540; --border:#4a2566; --mute
 }
 
 .modal .body {
+  margin-bottom: 0px;
   padding: 2rem;
   flex: 1;
   overflow-y: auto;

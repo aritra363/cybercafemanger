@@ -3,12 +3,14 @@ CM.Views.Inventory.render = async function() {
   let rows = await CM.DB.listInventory();
   let sort = { field:'name', dir: 'asc' }; // asc|desc
   let filters = { purchasePrice:null, sellingPrice:null, stock:null };
+  let searchTerm = '';
 
   root.innerHTML = `
     <div class="space-y-4">
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between gap-3">
         <h1 class="text-xl font-semibold">Inventory</h1>
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-wrap">
+          <input id="searchInput" type="text" class="input flex-1 min-w-[200px]" placeholder="Search by name..."/>
           <button id="btnExport" class="btn btn-primary"><i data-lucide="download"></i>Export XLSX</button>
           <button id="btnAdd" class="btn btn-primary"><i data-lucide="plus"></i>Add Item</button>
         </div>
@@ -37,7 +39,8 @@ CM.Views.Inventory.render = async function() {
 
   function applySortFilter(data){
     let out = [...data];
-    // filters: {col: {op:'lt'|'gt'|'range', a:number, b?:number}}
+    
+    // Apply filters first
     ['purchasePrice','sellingPrice','stock'].forEach(col => {
       const f = filters[col];
       if (!f) return;
@@ -46,6 +49,13 @@ CM.Views.Inventory.render = async function() {
       if (f.op==='range') out = out.filter(x => (x[col]||0) >= f.a && (x[col]||0) <= f.b);
     });
 
+    // Apply search on filtered data (or all data if no filters)
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      out = out.filter(x => x.name.toLowerCase().includes(term));
+    }
+
+    // Apply sorting
     out.sort((a,b) => {
       const A=a[sort.field], B=b[sort.field];
       if (typeof A === 'string') return sort.dir==='asc'? A.localeCompare(B): B.localeCompare(A);
@@ -58,20 +68,32 @@ CM.Views.Inventory.render = async function() {
     const body = document.getElementById('invBody');
     const data = applySortFilter(rows);
     body.innerHTML = '';
-    data.forEach(r => body.appendChild(CM.utils.el(`
-      <tr class="hover-row">
-        <td>${r.name}</td>
-        <td>₹${r.purchasePrice}</td>
-        <td>₹${r.sellingPrice}</td>
-        <td class="${r.stock<10?'text-[var(--danger)]':''}">${r.stock} ${r.stock<10?'<span class="badge badge-low ml-1">LOW</span>':''}</td>
-        <td>
-          <button class="icon-btn" data-edit="${r.id}"><i data-lucide="pencil"></i></button>
-          <button class="icon-btn" data-del="${r.id}"><i data-lucide="trash"></i></button>
-        </td>
-      </tr>`)));
+    
+    if (data.length === 0) {
+      body.appendChild(CM.utils.el(`<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--muted-foreground);">No items found</td></tr>`));
+    } else {
+      data.forEach(r => body.appendChild(CM.utils.el(`
+        <tr class="hover-row">
+          <td>${r.name}</td>
+          <td>₹${r.purchasePrice}</td>
+          <td>₹${r.sellingPrice}</td>
+          <td class="${r.stock<10?'text-[var(--danger)]':''}">${r.stock} ${r.stock<10?'<span class="badge badge-low ml-1">LOW</span>':''}</td>
+          <td>
+            <button class="icon-btn" data-edit="${r.id}"><i data-lucide="pencil"></i></button>
+            <button class="icon-btn" data-del="${r.id}"><i data-lucide="trash"></i></button>
+          </td>
+        </tr>`)));
+    }
     lucide.createIcons();
   }
   render();
+
+  // Search functionality
+  const searchInput = document.getElementById('searchInput');
+  searchInput.addEventListener('input', (e) => {
+    searchTerm = e.target.value;
+    render();
+  });
 
   // Sort
   root.querySelectorAll('[data-sort]').forEach(b => b.addEventListener('click', ()=>{
@@ -302,7 +324,17 @@ CM.Views.Inventory.render = async function() {
   // Export
   document.getElementById('btnExport').addEventListener('click', ()=>{
     try {
-      CM.exporter.toXlsx('inventory.xlsx', rows.map(r=>({ Name:r.name, Purchase:r.purchasePrice, Selling:r.sellingPrice, Stock:r.stock })));
+      const exportData = rows.map(r=>({ 
+        Name: r.name, 
+        'Purchase Price': r.purchasePrice, 
+        'Selling Price': r.sellingPrice, 
+        Stock: r.stock 
+      }));
+      CM.exporter.toXlsx('inventory.xlsx', exportData, 'Inventory', {
+        headerColor: true,
+        lowStockKey: 'Stock',
+        addFilter: true
+      });
       CM.UI.toast('Inventory exported successfully', 'success', 'Export Complete');
     } catch (err) {
       CM.UI.toast('Failed to export inventory', 'error', 'Export Failed');
