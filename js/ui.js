@@ -16,7 +16,13 @@ CM.UI = (() => {
   // --- Helper shortcuts ---
   const sb = () => document.getElementById("sidebar");
   const bd = () => document.getElementById("backdrop");
-  const isMobile = () => window.matchMedia("(max-width: 767px)").matches;
+  const isMobile = () => {
+    const route = document.body.getAttribute('data-page') || '';
+    if (route === 'pos') {
+      return window.matchMedia("(max-width: 934px)").matches;
+    }
+    return window.matchMedia("(max-width: 767px)").matches;
+  };
   const setBodyScroll = (allow) =>
     (document.body.style.overflow = allow ? "" : "hidden");
 
@@ -164,6 +170,14 @@ CM.UI = (() => {
       CM.State = CM.State || {};
       CM.State.route = route;
       setActive(route);
+      
+      // Set data-page attribute for route-aware mobile detection
+      document.body.setAttribute('data-page', route);
+      
+      // For POS below 934px, ensure sidebar is hidden
+      if (route === 'pos' && window.matchMedia("(max-width: 934px)").matches) {
+        closeSidebar();
+      }
 
       const v = CM.Views;
       switch (route) {

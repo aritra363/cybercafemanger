@@ -330,11 +330,7 @@ CM.Views.Inventory.render = async function() {
         'Selling Price': r.sellingPrice, 
         Stock: r.stock 
       }));
-      CM.exporter.toXlsx('inventory.xlsx', exportData, 'Inventory', {
-        headerColor: true,
-        lowStockKey: 'Stock',
-        addFilter: true
-      });
+      CM.exporter.inventoryToXlsx(exportData, 0);  // 0 means highlight items with stock <= 0
       CM.UI.toast('Inventory exported successfully', 'success', 'Export Complete');
     } catch (err) {
       CM.UI.toast('Failed to export inventory', 'error', 'Export Failed');

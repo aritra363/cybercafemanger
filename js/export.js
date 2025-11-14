@@ -25,30 +25,41 @@ CM.exporter = (() => {
     return (hex || '').trim().replace('#', '');
   }
 
-  // data = array of objects; keys become columns
-  // options = { headerColor: bool, lowStockKey: string, addFilter: bool }
-  async function toXlsx(filename, data, sheetName='Sheet1', options={}) {
+  // Generate filename with page name, date, and time
+  function getFilename(baseName) {
+    const now = new Date();
+    const date = now.toLocaleDateString('en-IN').replace(/\//g, '-'); // DD-MM-YYYY
+    const time = now.toLocaleTimeString('en-IN', { hour12: false }).replace(/:/g, '-'); // HH-MM-SS
+    return `${baseName}_${date}_${time}.xlsx`;
+  }
+
+  // Inventory-specific export with theme styling and low stock highlighting
+  async function inventoryToXlsx(data, lowStockThreshold = 0) {
     try {
-      // Check if ExcelJS is available
       if (typeof ExcelJS === 'undefined') {
-        console.warn('ExcelJS not available, falling back to SheetJS');
-        toXlsxSheetJS(filename, data, sheetName, options);
+        console.warn('ExcelJS not available, using SheetJS fallback');
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
+        const out = XLSX.write(wb, { bookType:'xlsx', type:'array' });
+        const blob = new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        CM.utils.downloadBlob(blob, getFilename('Inventory'));
         return;
       }
 
       const theme = getThemeColors();
       const primaryColor = cleanHex(theme.primary);
-      const dangerColor = cleanHex(theme.danger);
+      const lightRedColor = 'FFC5A5A5';  // Lighter red/pink shade instead of dark red
       
       // Create workbook
       const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet(sheetName);
+      const worksheet = workbook.addWorksheet('Inventory');
       
       // Add headers
       const headers = data.length > 0 ? Object.keys(data[0]) : [];
       worksheet.addRow(headers);
       
-      // Style header row
+      // Style header row with theme color
       const headerRow = worksheet.getRow(1);
       headerRow.eachCell((cell) => {
         cell.fill = {
@@ -71,7 +82,7 @@ CM.exporter = (() => {
       });
       
       // Add data rows
-      data.forEach((item, idx) => {
+      data.forEach((item) => {
         const row = worksheet.addRow(headers.map(h => item[h]));
         
         // Add borders and format
@@ -84,12 +95,12 @@ CM.exporter = (() => {
           };
           cell.alignment = { horizontal: 'left', vertical: 'center', wrapText: true };
           
-          // Check if low stock
-          if (options.lowStockKey && item[options.lowStockKey] !== undefined && Number(item[options.lowStockKey]) <= 0) {
+          // Highlight low stock items with lighter red
+          if (item['Stock'] !== undefined && Number(item['Stock']) <= lowStockThreshold) {
             cell.fill = {
               type: 'pattern',
               pattern: 'solid',
-              fgColor: { argb: 'FF' + dangerColor.toUpperCase() }
+              fgColor: { argb: lightRedColor }
             };
             cell.font = {
               bold: true,
@@ -105,7 +116,7 @@ CM.exporter = (() => {
       });
       
       // Add autofilter to header row
-      if (options.addFilter && data.length > 0) {
+      if (data.length > 0) {
         worksheet.autoFilter = {
           from: 'A1',
           to: { row: data.length + 1, column: headers.length }
@@ -113,6 +124,74 @@ CM.exporter = (() => {
       }
       
       // Generate file
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      CM.utils.downloadBlob(blob, getFilename('Inventory'));
+      
+      console.log('Inventory exported with ExcelJS successfully');
+    } catch (err) {
+      console.error('Inventory export failed:', err);
+      throw err;
+    }
+  }
+
+  // Generic export function for other pages (no special styling)
+  async function toXlsx(filename, data, sheetName='Sheet1', options={}) {
+    try {
+      if (typeof ExcelJS === 'undefined') {
+        console.warn('ExcelJS not available, using SheetJS fallback');
+        toXlsxSheetJS(filename, data, sheetName, options);
+        return;
+      }
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet(sheetName);
+      
+      // Add headers
+      const headers = data.length > 0 ? Object.keys(data[0]) : [];
+      worksheet.addRow(headers);
+      
+      // Simple header styling (no theme colors for generic export)
+      const headerRow = worksheet.getRow(1);
+      headerRow.eachCell((cell) => {
+        cell.font = { bold: true, size: 12 };
+        cell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+        cell.border = {
+          top: { style: 'thin' },
+          bottom: { style: 'thin' },
+          left: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      });
+      
+      // Add data rows
+      data.forEach((item) => {
+        const row = worksheet.addRow(headers.map(h => item[h]));
+        
+        row.eachCell((cell) => {
+          cell.border = {
+            top: { style: 'thin' },
+            bottom: { style: 'thin' },
+            left: { style: 'thin' },
+            right: { style: 'thin' }
+          };
+          cell.alignment = { horizontal: 'left', vertical: 'center', wrapText: true };
+        });
+      });
+      
+      // Set column widths
+      headers.forEach((header, idx) => {
+        worksheet.columns[idx].width = Math.max(header.length + 2, 18);
+      });
+      
+      // Add autofilter if requested
+      if (options.addFilter && data.length > 0) {
+        worksheet.autoFilter = {
+          from: 'A1',
+          to: { row: data.length + 1, column: headers.length }
+        };
+      }
+      
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       CM.utils.downloadBlob(blob, filename.endsWith('.xlsx') ? filename : `${filename}.xlsx`);
@@ -135,5 +214,5 @@ CM.exporter = (() => {
     CM.utils.downloadBlob(blob, filename.endsWith('.xlsx') ? filename : `${filename}.xlsx`);
   }
 
-  return { toXlsx };
+  return { toXlsx, inventoryToXlsx };
 })();

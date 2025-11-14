@@ -52,8 +52,16 @@ CM.Views.POS.render = async function() {
   function renderInventory(filter=''){
     const rows = inventory
       .filter(x => x.name.toLowerCase().includes(filter.toLowerCase()))
-      .map(x => `<tr data-id="${x.id}" class="cursor-pointer hover-row ${selectedId===x.id?'bg-[var(--muted)]':''}"><td class="p-2">${x.name}</td><td class="p-2">₹${x.sellingPrice}</td><td class="p-2 ${x.stock<10?'text-[var(--danger)]':''}">${x.stock}</td></tr>`).join('');
-    tableWrap.innerHTML = `<table class="table w-full"><thead><tr><th>Name</th><th>Price</th><th>Stock</th></tr></thead><tbody>${rows}</tbody></table>`;
+      .map(x => {
+        // Calculate available stock (original stock - items in cart)
+        const cartQty = cart.items
+          .filter(i=>i.type==='item' && i.id===x.id)
+          .reduce((sum, i)=>sum+i.quantity, 0);
+        const availableStock = x.stock - cartQty;
+        const stockClass = availableStock < 10 ? 'text-[var(--danger)]' : '';
+        return `<tr data-id="${x.id}" class="cursor-pointer hover-row ${selectedId===x.id?'bg-[var(--muted)]':''}"><td class="p-2">${x.name}</td><td class="p-2">₹${x.sellingPrice}</td><td class="p-2 ${stockClass}">${availableStock}/${x.stock}</td></tr>`;
+      }).join('');
+    tableWrap.innerHTML = `<table class="table w-full"><thead><tr><th>Name</th><th>Price</th><th>Available/Stock</th></tr></thead><tbody>${rows}</tbody></table>`;
     tableWrap.querySelectorAll('tbody tr').forEach(tr => tr.addEventListener('click', () => {
       selectedId = tr.dataset.id; renderInventory(document.getElementById('searchItem').value);
     }));
@@ -69,14 +77,23 @@ CM.Views.POS.render = async function() {
     }
     const item = inventory.find(i=>i.id===selectedId);
     const qty = Math.max(1, Number(document.getElementById('qty').value||1));
-    if (qty > item.stock) {
-      CM.UI.toast(`Only ${item.stock} units available in stock`, 'error', 'Insufficient Stock');
+    
+    // Calculate already-added quantity in cart
+    const cartQuantity = cart.items
+      .filter(i=>i.type==='item' && i.id===item.id)
+      .reduce((sum, i)=>sum+i.quantity, 0);
+    
+    const availableQty = item.stock - cartQuantity;
+    
+    if (qty > availableQty) {
+      CM.UI.toast(`Only ${availableQty} units available (${cartQuantity} already in cart)`, 'error', 'Insufficient Stock');
       return;
     }
     // push/update cart line
     const existing = cart.items.find(i=>i.type==='item' && i.id===item.id);
     if (existing) existing.quantity += qty; else cart.items.push({ type:'item', id:item.id, name:item.name, price:item.sellingPrice, quantity:qty, purchasePrice:item.purchasePrice });
     CM.UI.toast(`${item.name} x${qty} added to cart`, 'success', 'Item Added');
+    renderInventory(document.getElementById('searchItem').value);  // Refresh inventory display
     renderCart();
   });
 
@@ -125,6 +142,7 @@ CM.Views.POS.render = async function() {
       const itemName = cart.items[i].name;
       cart.items.splice(i,1);
       CM.UI.toast(`${itemName} removed from cart`, 'success', 'Item Removed');
+      renderInventory(document.getElementById('searchItem').value);  // Refresh inventory display
       renderCart();
     }));
     list.querySelectorAll('input[data-field]').forEach(inp => inp.addEventListener('change', () => {
@@ -133,13 +151,19 @@ CM.Views.POS.render = async function() {
       // If item and editing quantity, ensure stock
       if (f==='quantity' && cart.items[i].type==='item') {
         const inv = inventory.find(x=>x.id===cart.items[i].id);
-        if (val > inv.stock) {
-          CM.UI.toast(`Only ${inv.stock} units available in stock`, 'error', 'Stock Limit');
+        // Calculate already-added quantity from OTHER cart items
+        const otherQty = cart.items
+          .filter((x, idx)=>x.type==='item' && x.id===cart.items[i].id && idx!==i)
+          .reduce((sum, x)=>sum+x.quantity, 0);
+        const availableQty = inv.stock - otherQty;
+        if (val > availableQty) {
+          CM.UI.toast(`Only ${availableQty} units available (${otherQty} in other cart items)`, 'error', 'Stock Limit');
           inp.value=cart.items[i].quantity;
           return;
         }
       }
       cart.items[i][f] = f==='quantity'? Math.max(1, val) : val;
+      renderInventory(document.getElementById('searchItem').value);  // Refresh inventory display
       renderCart();
     }));
 
