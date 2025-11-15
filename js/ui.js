@@ -171,8 +171,26 @@ CM.UI = (() => {
       CM.State.route = route;
       setActive(route);
       
+      // Close any open modals before navigating
+      const modalRoot = document.getElementById('modal-root');
+      if (modalRoot) {
+        modalRoot.innerHTML = '';
+      }
+      
+      // Clear all event listeners from view root by cloning it
+      // This removes any accumulated listeners from previous pages
+      const view = document.getElementById('view');
+      if (view) {
+        const freshView = view.cloneNode(false);
+        view.parentNode.replaceChild(freshView, view);
+      }
+      
       // Set data-page attribute for route-aware mobile detection
       document.body.setAttribute('data-page', route);
+      
+      // Close sidebar and ensure body scroll is enabled when leaving any page
+      closeSidebar();
+      setBodyScroll(true);
       
       // For POS below 934px, ensure sidebar is hidden
       if (route === 'pos' && window.matchMedia("(max-width: 934px)").matches) {

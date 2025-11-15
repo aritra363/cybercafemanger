@@ -44,6 +44,10 @@ CM.DB = (() => {
     await waitReady(); const { db, fire } = CM.firebase;
     await fire.deleteDoc(fire.doc(db,'expenses', id));
   }
+  async function updateExpense(id, updates) {
+    await waitReady(); const { db, fire } = CM.firebase;
+    await fire.updateDoc(fire.doc(db,'expenses', id), updates);
+  }
 
   async function addSale(sale, itemDeltas) {
     await waitReady(); const { db, fire } = CM.firebase;
@@ -68,5 +72,5 @@ CM.DB = (() => {
     return snap.docs.map(d => ({ id:d.id, ...d.data() }));
   }
 
-  return { addInventory, updateInventory, deleteInventory, listInventory, addExpense, listExpenses, deleteExpense, addSale, listSales };
+  return { addInventory, updateInventory, deleteInventory, listInventory, addExpense, listExpenses, deleteExpense, updateExpense, addSale, listSales };
 })();

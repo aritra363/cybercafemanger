@@ -35,9 +35,214 @@ html[data-theme="slate"]{ --bg:#1a0a1f; --card:#2d1540; --border:#4a2566; --mute
 .table td{ padding:.5rem; border-bottom:1px solid var(--border); color:var(--text); }
 .hover-row:hover{ background:color-mix(in srgb, var(--muted) 50%, transparent); }
 
+/* Sales page table responsive scaling */
+.sales-table {
+  font-size: 0.875rem;
+}
+
+.sales-table th,
+.sales-table td {
+  padding: 0.5rem;
+}
+
+.sales-header-btn {
+  font-size: inherit;
+}
+
+.sales-mini-table {
+  font-size: 0.875rem;
+}
+
+.sales-mini-table th,
+.sales-mini-table td {
+  padding: 0.5rem;
+}
+
+/* Inventory table responsive scaling */
+.inventory-table {
+  font-size: 0.875rem;
+}
+
+.inventory-table th,
+.inventory-table td {
+  padding: 0.5rem;
+}
+
+.inventory-header-btn {
+  font-size: inherit;
+}
+
+/* Expense table responsive scaling */
+.expense-table {
+  font-size: 0.875rem;
+}
+
+.expense-table th,
+.expense-table td {
+  padding: 0.5rem;
+}
+
+.expense-header-btn {
+  font-size: inherit;
+}
+
+/* Mobile (max 767px) */
+@media (max-width: 767px) {
+  .sales-table {
+    font-size: 0.75rem;
+  }
+  
+  .sales-table th,
+  .sales-table td {
+    padding: 0.35rem 0.25rem;
+  }
+  
+  .sales-header-btn {
+    font-size: 0.75rem;
+  }
+  
+  .sales-mini-table {
+    font-size: 0.7rem;
+  }
+  
+  .sales-mini-table th,
+  .sales-mini-table td {
+    padding: 0.3rem 0.2rem;
+  }
+
+  .inventory-table {
+    font-size: 0.75rem;
+  }
+  
+  .inventory-table th,
+  .inventory-table td {
+    padding: 0.35rem 0.25rem;
+  }
+  
+  .inventory-header-btn {
+    font-size: 0.75rem;
+  }
+
+  .expense-table {
+    font-size: 0.75rem;
+  }
+  
+  .expense-table th,
+  .expense-table td {
+    padding: 0.35rem 0.25rem;
+  }
+  
+  .expense-header-btn {
+    font-size: 0.75rem;
+  }
+}
+
+/* Tablet with sidebar (768px - 934px) */
+@media (min-width: 768px) and (max-width: 934px) {
+  .sales-table {
+    font-size: 0.7rem;
+  }
+  
+  .sales-table th,
+  .sales-table td {
+    padding: 0.3rem 0.2rem;
+  }
+  
+  .sales-header-btn {
+    font-size: 0.7rem;
+  }
+  
+  .sales-mini-table {
+    font-size: 0.65rem;
+  }
+  
+  .sales-mini-table th,
+  .sales-mini-table td {
+    padding: 0.25rem 0.15rem;
+  }
+
+  .inventory-table {
+    font-size: 0.7rem;
+  }
+  
+  .inventory-table th,
+  .inventory-table td {
+    padding: 0.3rem 0.2rem;
+  }
+  
+  .inventory-header-btn {
+    font-size: 0.7rem;
+  }
+
+  .expense-table {
+    font-size: 0.7rem;
+  }
+  
+  .expense-table th,
+  .expense-table td {
+    padding: 0.3rem 0.2rem;
+  }
+  
+  .expense-header-btn {
+    font-size: 0.7rem;
+  }
+}
+
+/* Desktop (935px+) */
+@media (min-width: 935px) {
+  .sales-table {
+    font-size: 0.875rem;
+  }
+  
+  .sales-table th,
+  .sales-table td {
+    padding: 0.5rem;
+  }
+  
+  .sales-header-btn {
+    font-size: 0.875rem;
+  }
+  
+  .sales-mini-table {
+    font-size: 0.8rem;
+  }
+  
+  .sales-mini-table th,
+  .sales-mini-table td {
+    padding: 0.4rem;
+  }
+
+  .inventory-table {
+    font-size: 0.875rem;
+  }
+  
+  .inventory-table th,
+  .inventory-table td {
+    padding: 0.5rem;
+  }
+  
+  .inventory-header-btn {
+    font-size: 0.875rem;
+  }
+
+  .expense-table {
+    font-size: 0.875rem;
+  }
+  
+  .expense-table th,
+  .expense-table td {
+    padding: 0.5rem;
+  }
+  
+  .expense-header-btn {
+    font-size: 0.875rem;
+  }
+}
+
 /* Badges */
 .badge{ font-size:.75rem; padding:.125rem .5rem; border-radius:999px; background:var(--muted); color:var(--text); }
 .badge-low{ background:color-mix(in srgb, var(--danger) 20%, var(--muted)); color:#fff; }
+.badge-loss{ background:color-mix(in srgb, var(--danger) 20%, var(--muted)); color:#fff; }
 
 /* Modal */
 .modal-backdrop {

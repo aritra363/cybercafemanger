@@ -1,9 +1,14 @@
 CM.Views.Inventory.render = async function() {
   const root = document.getElementById('view');
-  let rows = await CM.DB.listInventory();
+  let rowsCache = null;  // Cache for all inventory items (loaded once, used for export)
   let sort = { field:'name', dir: 'asc' }; // asc|desc
   let filters = { purchasePrice:null, sellingPrice:null, stock:null };
   let searchTerm = '';
+  
+  // Initialize pagination state
+  const state = CM.State.filters.inventory = CM.State.filters.inventory || {};
+  state.page = state.page || 1;
+  state.itemsPerPage = state.itemsPerPage || 10;
 
   root.innerHTML = `
     <div class="space-y-4">
@@ -17,7 +22,7 @@ CM.Views.Inventory.render = async function() {
       </div>
 
       <div class="card p-3 overflow-auto">
-        <table class="table w-full min-w-[720px]">
+        <table class="table w-full inventory-table">
           <thead>
             <tr>
               ${['name','purchasePrice','sellingPrice','stock'].map(col => `
@@ -32,6 +37,26 @@ CM.Views.Inventory.render = async function() {
           </thead>
           <tbody id="invBody"></tbody>
         </table>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-4 p-3">
+        <div class="flex items-center gap-2">
+          <label for="itemsPerPage" class="text-sm font-medium">Items per page:</label>
+          <select id="itemsPerPage" class="input w-20">
+            <option value="10" ${state.itemsPerPage === 10 ? 'selected' : ''}>10</option>
+            <option value="20" ${state.itemsPerPage === 20 ? 'selected' : ''}>20</option>
+            <option value="50" ${state.itemsPerPage === 50 ? 'selected' : ''}>50</option>
+            <option value="100" ${state.itemsPerPage === 100 ? 'selected' : ''}>100</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="pageInfo" class="text-sm text-[var(--muted-foreground)]"></span>
+        </div>
+        <div class="flex gap-2">
+          <button id="btnPrevPage" class="btn btn-soft"><i data-lucide="chevron-left"></i>Previous</button>
+          <div id="pageNumbers" class="flex gap-1"></div>
+          <button id="btnNextPage" class="btn btn-soft">Next<i data-lucide="chevron-right"></i></button>
+        </div>
       </div>
     </div>`;
 
@@ -64,40 +89,139 @@ CM.Views.Inventory.render = async function() {
     return out;
   }
 
-  function render(){
-    const body = document.getElementById('invBody');
-    const data = applySortFilter(rows);
-    body.innerHTML = '';
-    
-    if (data.length === 0) {
-      body.appendChild(CM.utils.el(`<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--muted-foreground);">No items found</td></tr>`));
-    } else {
-      data.forEach(r => body.appendChild(CM.utils.el(`
-        <tr class="hover-row">
-          <td>${r.name}</td>
-          <td>₹${r.purchasePrice}</td>
-          <td>₹${r.sellingPrice}</td>
-          <td class="${r.stock<10?'text-[var(--danger)]':''}">${r.stock} ${r.stock<10?'<span class="badge badge-low ml-1">LOW</span>':''}</td>
-          <td>
-            <button class="icon-btn" data-edit="${r.id}"><i data-lucide="pencil"></i></button>
-            <button class="icon-btn" data-del="${r.id}"><i data-lucide="trash"></i></button>
-          </td>
-        </tr>`)));
+  async function loadAllForCache() {
+    // Load and cache all inventory items for export
+    if (rowsCache !== null) {
+      console.log('📦 [Inventory] Using cached data (no DB query)');
+      return rowsCache;
     }
-    lucide.createIcons();
+    
+    console.log('🔄 [Inventory] Loading data from database...');
+    const startTime = performance.now();
+    rowsCache = await CM.DB.listInventory();
+    const loadTime = (performance.now() - startTime).toFixed(2);
+    
+    // Performance monitoring
+    const dataSize = JSON.stringify(rowsCache).length;
+    const dataSizeMB = (dataSize / 1024 / 1024).toFixed(2);
+    console.log(`✅ [Inventory] Loaded ${rowsCache.length} items in ${loadTime}ms (${dataSizeMB}MB)`);
+    
+    // Alert if data is getting large
+    if (rowsCache.length > 5000) {
+      console.warn(`⚠️  [Inventory] Large dataset detected (${rowsCache.length} items). Consider implementing server-side pagination.`);
+    }
+    
+    return rowsCache;
+  }
+
+  function render(){
+    // Load all data in the background
+    loadAllForCache().then(rows => {
+      const data = applySortFilter(rows);
+      const totalItems = data.length;
+      const totalPages = Math.ceil(totalItems / state.itemsPerPage) || 1;
+      
+      // Clamp page to valid range
+      if (state.page > totalPages) state.page = totalPages;
+      if (state.page < 1) state.page = 1;
+
+      const startIdx = (state.page - 1) * state.itemsPerPage;
+      const endIdx = startIdx + state.itemsPerPage;
+      const pageData = data.slice(startIdx, endIdx);
+
+      const body = document.getElementById('invBody');
+      body.innerHTML = '';
+      
+      if (pageData.length === 0) {
+        body.appendChild(CM.utils.el(`<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--muted-foreground);">No items found</td></tr>`));
+      } else {
+        pageData.forEach(r => body.appendChild(CM.utils.el(`
+          <tr class="hover-row">
+            <td>${r.name}</td>
+            <td>₹${r.purchasePrice}</td>
+            <td>₹${r.sellingPrice}</td>
+            <td class="${r.stock<10?'text-[var(--danger)]':''}">${r.stock} ${r.stock<10?'<span class="badge badge-low ml-1">LOW</span>':''}</td>
+            <td>
+              <button class="icon-btn" data-edit="${r.id}"><i data-lucide="pencil"></i></button>
+              <button class="icon-btn" data-del="${r.id}"><i data-lucide="trash"></i></button>
+            </td>
+          </tr>`)));
+      }
+
+      // Update page info
+      const pageInfo = document.getElementById('pageInfo');
+      if (totalItems === 0) {
+        pageInfo.textContent = 'No items';
+      } else {
+        pageInfo.textContent = `Showing ${startIdx + 1}–${Math.min(endIdx, totalItems)} of ${totalItems}`;
+      }
+
+      // Render page numbers
+      const pageNumbers = document.getElementById('pageNumbers');
+      pageNumbers.innerHTML = '';
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.className = `btn btn-soft ${i === state.page ? 'ring-2 ring-[var(--primary)]' : ''}`;
+        btn.textContent = i;
+        btn.addEventListener('click', () => {
+          state.page = i;
+          render();
+        });
+        pageNumbers.appendChild(btn);
+      }
+
+      // Update prev/next buttons
+      const btnPrev = document.getElementById('btnPrevPage');
+      const btnNext = document.getElementById('btnNextPage');
+      btnPrev.disabled = state.page === 1;
+      btnNext.disabled = state.page === totalPages;
+      
+      lucide.createIcons();
+    });
   }
   render();
 
-  // Search functionality
+  // Search functionality with debouncing for better performance
   const searchInput = document.getElementById('searchInput');
+  let searchTimeout;
   searchInput.addEventListener('input', (e) => {
-    searchTerm = e.target.value;
+    // Clear previous timeout
+    clearTimeout(searchTimeout);
+    
+    // Debounce search - wait 300ms before executing
+    searchTimeout = setTimeout(() => {
+      searchTerm = e.target.value;
+      state.page = 1;
+      render();
+    }, 300);
+  });
+
+  // Items per page
+  document.getElementById('itemsPerPage').addEventListener('change', (e) => {
+    state.itemsPerPage = parseInt(e.target.value);
+    state.page = 1;
     render();
+  });
+
+  // Prev/Next buttons
+  document.getElementById('btnPrevPage').addEventListener('click', () => {
+    if (state.page > 1) {
+      state.page--;
+      render();
+    }
+  });
+  document.getElementById('btnNextPage').addEventListener('click', () => {
+    const totalItems = applySortFilter(rows).length;
+    const totalPages = Math.ceil(totalItems / state.itemsPerPage) || 1;
+    if (state.page < totalPages) {
+      state.page++;
+      render();
+    }
   });
 
   // Sort
   root.querySelectorAll('[data-sort]').forEach(b => b.addEventListener('click', ()=>{
-    const f = b.dataset.sort; sort.field===f ? (sort.dir = sort.dir==='asc'?'desc':'asc') : (sort={ field:f, dir:'asc' }); render();
+    const f = b.dataset.sort; sort.field===f ? (sort.dir = sort.dir==='asc'?'desc':'asc') : (sort={ field:f, dir:'asc' }); state.page = 1; render();
   }));
 
   function updateFilterButtons() {
@@ -144,61 +268,94 @@ CM.Views.Inventory.render = async function() {
     }
     
     // Otherwise, show the filter modal
-    const modal = CM.utils.el(`<div class="modal-backdrop"><div class="modal">
-      <header><h3>Filter by ${col}</h3><button class="icon-btn" id="xClose"><i data-lucide="x"></i></button></header>
+    const modalHTML = `<div class="modal-backdrop"><div class="modal">
+      <header><h3>Filter by ${col}</h3><button class="icon-btn" id="filterClose"><i data-lucide="x"></i></button></header>
       <div class="body">
         <div class="space-y-4">
           <div>
             <label>Filter Type</label>
             <div class="space-y-2">
               <label class="flex items-center gap-3 cursor-pointer">
-                <input type="radio" name="op" value="lt" checked style="cursor:pointer"/>
+                <input type="radio" id="opLt" name="filterOp" value="lt" checked style="cursor:pointer"/>
                 <span>Less than</span>
               </label>
               <label class="flex items-center gap-3 cursor-pointer">
-                <input type="radio" name="op" value="gt" style="cursor:pointer"/>
+                <input type="radio" id="opGt" name="filterOp" value="gt" style="cursor:pointer"/>
                 <span>Greater than</span>
               </label>
               <label class="flex items-center gap-3 cursor-pointer">
-                <input type="radio" name="op" value="range" style="cursor:pointer"/>
+                <input type="radio" id="opRange" name="filterOp" value="range" style="cursor:pointer"/>
                 <span>Range</span>
               </label>
             </div>
           </div>
           <div>
             <label>Value</label>
-            <input id="a" type="number" class="input" placeholder="From"/>
+            <input id="filterFrom" type="number" class="input" placeholder="From"/>
           </div>
-          <div id="rangeDiv" class="hidden">
+          <div id="filterRangeDiv" class="hidden">
             <label>To</label>
-            <input id="b" type="number" class="input" placeholder="To"/>
+            <input id="filterTo" type="number" class="input" placeholder="To"/>
           </div>
         </div>
       </div>
       <footer>
-        <button class="btn btn-soft" id="btnClear">Clear Filter</button>
-        <button class="btn btn-primary" id="btnApply"><i data-lucide="filter"></i>Apply Filter</button>
+        <button class="btn btn-soft" id="btnClearFilter">Clear Filter</button>
+        <button class="btn btn-primary" id="btnApplyFilter"><i data-lucide="filter"></i>Apply Filter</button>
       </footer>
-    </div></div>`);
-    document.getElementById('modal-root').appendChild(modal);
-    lucide.createIcons();
-    const close = ()=> document.getElementById('modal-root').removeChild(modal);
-    const rangeDiv = modal.querySelector('#rangeDiv');
+    </div></div>`;
     
-    modal.querySelector('#xClose').onclick=close;
-    modal.querySelector('input[name="op"][value="range"]').addEventListener('change',()=> rangeDiv.classList.remove('hidden'));
-    modal.querySelector('input[name="op"][value="lt"]').addEventListener('change',()=> rangeDiv.classList.add('hidden'));
-    modal.querySelector('input[name="op"][value="gt"]').addEventListener('change',()=> rangeDiv.classList.add('hidden'));
-    modal.querySelector('#btnClear').onclick = ()=>{ filters[col]=null; updateFilterButtons(); render(); close(); };
-    modal.querySelector('#btnApply').onclick = ()=>{
-      const op = modal.querySelector('input[name="op"]:checked').value;
-      const a = Number(modal.querySelector('#a').value);
-      const b = Number(modal.querySelector('#b').value);
+    const modalRoot = document.getElementById('modal-root');
+    modalRoot.innerHTML = '';
+    const backdrop = CM.utils.el(modalHTML);
+    modalRoot.appendChild(backdrop);
+    lucide.createIcons();
+    
+    const modal = backdrop.querySelector('.modal');
+    
+    const close = () => {
+      modalRoot.innerHTML = '';
+    };
+    
+    // Get all elements
+    const closeBtn = modal.querySelector('#filterClose');
+    const opLt = modal.querySelector('#opLt');
+    const opGt = modal.querySelector('#opGt');
+    const opRange = modal.querySelector('#opRange');
+    const filterFrom = modal.querySelector('#filterFrom');
+    const filterTo = modal.querySelector('#filterTo');
+    const filterRangeDiv = modal.querySelector('#filterRangeDiv');
+    const clearBtn = modal.querySelector('#btnClearFilter');
+    const applyBtn = modal.querySelector('#btnApplyFilter');
+    
+    closeBtn.onclick = close;
+    backdrop.onclick = (e) => {
+      if (e.target === backdrop) close();
+    };
+    
+    // Show/hide range div based on selected option
+    opRange.addEventListener('change', () => filterRangeDiv.classList.remove('hidden'));
+    opLt.addEventListener('change', () => filterRangeDiv.classList.add('hidden'));
+    opGt.addEventListener('change', () => filterRangeDiv.classList.add('hidden'));
+    
+    clearBtn.onclick = () => {
+      filters[col] = null;
+      updateFilterButtons();
+      render();
+      close();
+    };
+    
+    applyBtn.onclick = () => {
+      const op = modal.querySelector('input[name="filterOp"]:checked').value;
+      const a = Number(filterFrom.value);
+      const b = Number(filterTo.value);
+      
       if (!Number.isFinite(a)) {
         CM.UI.toast('Please enter a valid filter value', 'error', 'Validation Error');
         return;
       }
-      filters[col] = op==='range'? { op, a, b } : { op, a };
+      
+      filters[col] = op === 'range' ? { op, a, b } : { op, a };
       CM.UI.toast(`Filter applied to ${col}`, 'success', 'Filter Applied');
       updateFilterButtons();
       render();
@@ -212,13 +369,17 @@ CM.Views.Inventory.render = async function() {
   document.getElementById('btnAdd').addEventListener('click', ()=> openEdit());
   root.addEventListener('click', async (e)=>{
     const id = e.target.closest('[data-edit]')?.dataset.edit;
-    if (id) { const it = rows.find(r=>r.id===id); openEdit(it); }
+    if (id) { 
+      const rows = await loadAllForCache();
+      const it = rows.find(r=>r.id===id); 
+      openEdit(it); 
+    }
     const did = e.target.closest('[data-del]')?.dataset.del;
     if (did) {
       if (await CM.utils.confirm('Delete item','This action cannot be undone.')) {
         try {
           await CM.DB.deleteInventory(did);
-          rows = rows.filter(r=>r.id!==did);
+          rowsCache = null;  // Clear cache so it reloads
           render();
           CM.UI.toast('Item deleted successfully', 'success', 'Item Deleted');
         } catch (err) {
@@ -231,25 +392,27 @@ CM.Views.Inventory.render = async function() {
   function openEdit(item){
     const isNew = !item;
     item = item || { name:'', purchasePrice:0, sellingPrice:0, stock:0 };
-    const modal = CM.utils.el(`<div class="modal-backdrop"><div class="modal">
+    
+    // Create modal HTML
+    const modalHTML = `<div class="modal-backdrop"><div class="modal">
       <header><h3>${isNew?'Add New Item':'Edit Item'}</h3><button class="icon-btn" id="xClose"><i data-lucide="x"></i></button></header>
       <div class="body">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label>Item Name</label>
-            <input id="name" class="input" placeholder="e.g., Pencil, Notebook" value="${item.name}"/>
+            <input id="invName" class="input" placeholder="e.g., Pencil, Notebook" value="${item.name}"/>
           </div>
           <div>
             <label>Purchase Price (₹)</label>
-            <input id="purchasePrice" type="number" min="0" step="0.01" class="input" placeholder="Cost price" value="${item.purchasePrice}"/>
+            <input id="invPurchasePrice" type="number" min="0" step="0.01" class="input" placeholder="Cost price" value="${item.purchasePrice}"/>
           </div>
           <div>
             <label>Selling Price (₹)</label>
-            <input id="sellingPrice" type="number" min="0" step="0.01" class="input" placeholder="Sale price" value="${item.sellingPrice}"/>
+            <input id="invSellingPrice" type="number" min="0" step="0.01" class="input" placeholder="Sale price" value="${item.sellingPrice}"/>
           </div>
           <div>
             <label>Stock Quantity</label>
-            <input id="stock" type="number" min="0" step="1" class="input" placeholder="Units in stock" value="${item.stock}"/>
+            <input id="invStock" type="number" min="0" step="1" class="input" placeholder="Units in stock" value="${item.stock}"/>
           </div>
         </div>
       </div>
@@ -257,39 +420,67 @@ CM.Views.Inventory.render = async function() {
         <button class="btn btn-soft" id="btnCancel">Cancel</button>
         <button class="btn btn-primary" id="btnSave"><i data-lucide="save"></i>Save Item</button>
       </footer>
-    </div></div>`);
-    document.getElementById('modal-root').appendChild(modal);
-    lucide.createIcons();
-    const close=()=> document.getElementById('modal-root').removeChild(modal);
-    modal.querySelector('#xClose').onclick=close;
-    modal.querySelector('#btnCancel').onclick=close;
+    </div></div>`;
     
-    // Handle Enter key to submit form
-    const handleEnter = (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        modal.querySelector('#btnSave').click();
-      }
+    // Clear any existing modals
+    const modalRoot = document.getElementById('modal-root');
+    modalRoot.innerHTML = '';
+    
+    // Create and append modal
+    const backdrop = CM.utils.el(modalHTML);
+    modalRoot.appendChild(backdrop);
+    lucide.createIcons();
+    
+    // The modal is inside the backdrop
+    const modal = backdrop.querySelector('.modal');
+    
+    // Create close function
+    const close = () => {
+      modalRoot.innerHTML = '';
     };
-    modal.querySelectorAll('.input').forEach(input => {
-      input.addEventListener('keypress', handleEnter);
+    
+    // Get all elements we need
+    const closeBtn = modal.querySelector('#xClose');
+    const cancelBtn = modal.querySelector('#btnCancel');
+    const saveBtn = modal.querySelector('#btnSave');
+    const nameInput = modal.querySelector('#invName');
+    const purchasePriceInput = modal.querySelector('#invPurchasePrice');
+    const sellingPriceInput = modal.querySelector('#invSellingPrice');
+    const stockInput = modal.querySelector('#invStock');
+    
+    closeBtn.onclick = close;
+    cancelBtn.onclick = close;
+    
+    // Close on backdrop click
+    backdrop.onclick = (e) => {
+      if (e.target === backdrop) close();
+    };
+    
+    // Enter key to save
+    [nameInput, purchasePriceInput, sellingPriceInput, stockInput].forEach(input => {
+      input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveBtn.click();
+        }
+      });
     });
     
-    modal.querySelector('#btnSave').onclick = async ()=>{
-      const name = modal.querySelector('#name').value.trim();
-      const purchasePrice = Number(modal.querySelector('#purchasePrice').value);
-      const sellingPrice = Number(modal.querySelector('#sellingPrice').value);
-      const stock = Number(modal.querySelector('#stock').value);
+    saveBtn.onclick = async () => {
+      const name = nameInput.value.trim();
+      const purchasePrice = Number(purchasePriceInput.value);
+      const sellingPrice = Number(sellingPriceInput.value);
+      const stock = Number(stockInput.value);
       
       if (!name) {
         CM.UI.toast('Please enter an item name', 'error', 'Validation Error');
         return;
       }
-      if (!Number.isFinite(purchasePrice) || purchasePrice<0) {
+      if (!Number.isFinite(purchasePrice) || purchasePrice < 0) {
         CM.UI.toast('Please enter a valid purchase price', 'error', 'Validation Error');
         return;
       }
-      if (!Number.isFinite(sellingPrice) || sellingPrice<0) {
+      if (!Number.isFinite(sellingPrice) || sellingPrice < 0) {
         CM.UI.toast('Please enter a valid selling price', 'error', 'Validation Error');
         return;
       }
@@ -297,7 +488,7 @@ CM.Views.Inventory.render = async function() {
         CM.UI.toast('Selling price cannot be less than purchase price', 'error', 'Price Error');
         return;
       }
-      if (!Number.isFinite(stock) || stock<0) {
+      if (!Number.isFinite(stock) || stock < 0) {
         CM.UI.toast('Please enter a valid stock quantity', 'error', 'Validation Error');
         return;
       }
@@ -305,11 +496,11 @@ CM.Views.Inventory.render = async function() {
       try {
         if (isNew) {
           const created = await CM.DB.addInventory({ name, purchasePrice, sellingPrice, stock });
-          rows.push(created);
+          rowsCache = null;  // Clear cache so it reloads
           CM.UI.toast(`${name} added to inventory`, 'success', 'Item Added');
         } else {
           await CM.DB.updateInventory(item.id, { name, purchasePrice, sellingPrice, stock });
-          Object.assign(rows.find(r=>r.id===item.id), { name, purchasePrice, sellingPrice, stock });
+          rowsCache = null;  // Clear cache so it reloads
           CM.UI.toast(`${name} updated successfully`, 'success', 'Item Updated');
         }
         render();
@@ -322,8 +513,9 @@ CM.Views.Inventory.render = async function() {
   }
 
   // Export
-  document.getElementById('btnExport').addEventListener('click', ()=>{
+  document.getElementById('btnExport').addEventListener('click', async ()=>{
     try {
+      const rows = await loadAllForCache();
       const exportData = rows.map(r=>({ 
         Name: r.name, 
         'Purchase Price': r.purchasePrice, 
