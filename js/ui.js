@@ -89,20 +89,104 @@ CM.UI = (() => {
 
   // --- Theme Buttons ---
   function initThemeButtons() {
-    document.querySelectorAll(".theme-btn").forEach((b) => {
+    // Color theme buttons
+    document.querySelectorAll(".color-theme-btn").forEach((b) => {
       b.addEventListener("click", () => {
         const theme = b.dataset.theme;
         CM.State = CM.State || {};
-        CM.State.theme = theme;
+        CM.State.colorTheme = theme;
         document.documentElement.setAttribute("data-theme", theme);
-        localStorage.setItem("cm:theme", theme);
+        localStorage.setItem("cm:colorTheme", theme);
+        
+        // Update active indicator
+        document.querySelectorAll(".color-theme-btn").forEach(btn => btn.classList.remove("active-theme"));
+        b.classList.add("active-theme");
       });
     });
 
-    // Apply saved theme on load
-    const saved = localStorage.getItem("cm:theme");
-    if (saved) document.documentElement.setAttribute("data-theme", saved);
+    // Design theme buttons
+    document.querySelectorAll(".design-theme-btn").forEach((b) => {
+      b.addEventListener("click", () => {
+        const theme = b.dataset.theme;
+        CM.State = CM.State || {};
+        CM.State.designTheme = theme;
+        document.documentElement.setAttribute("data-design-theme", theme);
+        localStorage.setItem("cm:designTheme", theme);
+        
+        // Update active indicator
+        document.querySelectorAll(".design-theme-btn").forEach(btn => btn.classList.remove("active-theme"));
+        b.classList.add("active-theme");
+        
+        // Update icons based on design theme
+        updateIconsForDesignTheme(theme);
+      });
+    });
+
+    // Apply saved themes on load
+    const savedColor = localStorage.getItem("cm:colorTheme") || "sunset";
+    const savedDesign = localStorage.getItem("cm:designTheme") || "glass-modern";
+    
+    document.documentElement.setAttribute("data-theme", savedColor);
+    document.documentElement.setAttribute("data-design-theme", savedDesign);
+    
+    // Clear all active indicators first
+    document.querySelectorAll(".active-theme").forEach(btn => btn.classList.remove("active-theme"));
+    
+    // Set active indicators for saved themes
+    document.querySelector(`.color-theme-btn[data-theme="${savedColor}"]`)?.classList.add("active-theme");
+    document.querySelector(`.design-theme-btn[data-theme="${savedDesign}"]`)?.classList.add("active-theme");
+    
+    // Update icons on initial load
+    updateIconsForDesignTheme(savedDesign);
   }
+
+  // --- Update icons based on design theme ---
+  function updateIconsForDesignTheme(theme) {
+    const iconMap = {
+      "glass-modern": { edit: "pencil", delete: "trash", filter: "filter", low: "alert-circle" },
+      "neumorphic-soft": { edit: "edit-3", delete: "trash-2", filter: "sliders", low: "alert-circle" },
+      "gradient-bold": { edit: "edit", delete: "x-circle", filter: "settings", low: "alert-circle" },
+      "brutalist-sharp": { edit: "edit", delete: "trash", filter: "settings", low: "alert-circle" },
+      "minimalist-clean": { edit: "pen-tool", delete: "x", filter: "filter", low: "alert-circle" },
+      "retro-neon": { edit: "edit-2", delete: "trash-2", filter: "sliders", low: "alert-triangle" },
+      "material-design": { edit: "edit-2", delete: "delete", filter: "settings", low: "alert-circle" }
+    };
+
+    const icons = iconMap[theme] || iconMap["glass-modern"];
+
+    // Update edit and delete icons in tables
+    document.querySelectorAll("[data-edit]").forEach(btn => {
+      const lucideIcon = btn.querySelector("[data-lucide]");
+      if (lucideIcon) {
+        lucideIcon.setAttribute("data-lucide", icons.edit);
+      }
+    });
+
+    document.querySelectorAll("[data-del]").forEach(btn => {
+      const lucideIcon = btn.querySelector("[data-lucide]");
+      if (lucideIcon) {
+        lucideIcon.setAttribute("data-lucide", icons.delete);
+      }
+    });
+
+    // Update filter icons
+    document.querySelectorAll("[data-filter]").forEach(btn => {
+      const lucideIcon = btn.querySelector("[data-lucide]");
+      if (lucideIcon) {
+        lucideIcon.setAttribute("data-lucide", icons.filter);
+      }
+    });
+
+    // Update low stock indicators - update icon only, preserve text
+    document.querySelectorAll(".badge-low i").forEach(icon => {
+      icon.setAttribute("data-lucide", icons.low);
+    });
+
+    // Recreate Lucide icons
+    if (typeof lucide !== "undefined" && lucide.createIcons) {
+      lucide.createIcons();
+    }
+  };
 
   // --- Active nav state ---
   function setActive(route) {
@@ -256,7 +340,7 @@ CM.UI = (() => {
     );
   }
 
-  return { init, toast, toggleSidebar };
+  return { init, toast, toggleSidebar, updateIconsForDesignTheme };
 })();
 
 // Make toast globally accessible

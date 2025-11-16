@@ -16,24 +16,502 @@
 html[data-theme="ocean-dark"]{
   --bg:#0f172a; --card:#111827; --border:#1f2937; --muted:#0b1222; --muted-foreground:#9ca3af; --text:#ffffff; --primary:#60a5fa; --primary-foreground:#0b1222;
 }
-html[data-theme="emerald"]{ --primary:#10b981; }
-html[data-theme="sunset"]{ --primary:#f97316; }
-html[data-theme="violet"]{ --primary:#8b5cf6; }
+
+/* Keep only 1 additional dark theme */
 html[data-theme="slate"]{ --bg:#1a0a1f; --card:#2d1540; --border:#4a2566; --muted:#23133a; --muted-foreground:#d9a8e8; --text:#fde7ff; --primary:#ff006e; --primary-foreground:#1a0a1f; }
 
-/* Basic controls */
-.btn{ display:inline-flex; align-items:center; gap:.5rem; padding:.5rem .75rem; border-radius:.5rem; font-weight:600; border:0; background:var(--muted); color:var(--text); cursor:pointer; }
+/* 11 Light & Elegant Themes with Unique Colors */
+
+/* Emerald Light - Fresh green with white background */
+html[data-theme="emerald"]{ 
+  --bg:#f0fdf4; --card:#ffffff; --border:#dcfce7; --muted:#f0fdf4; --muted-foreground:#4b5563; --text:#15803d; --primary:#16a34a; --primary-foreground:#ffffff; --success:#22c55e; --warning:#fbbf24; --danger:#ef4444; --info:#0284c7;
+}
+
+/* Sunset Light - Orange and warm tones */
+html[data-theme="sunset"]{ 
+  --bg:#fff7ed; --card:#ffffff; --border:#fed7aa; --muted:#fef3c7; --muted-foreground:#7c2d12; --text:#92400e; --primary:#f97316; --primary-foreground:#ffffff; --success:#84cc16; --warning:#eab308; --danger:#f87171; --info:#38bdf8;
+}
+
+/* Violet Light - Purple and lavender */
+html[data-theme="violet"]{ 
+  --bg:#faf5ff; --card:#ffffff; --border:#e9d5ff; --muted:#f3e8ff; --muted-foreground:#6b21a8; --text:#7c3aed; --primary:#a855f7; --primary-foreground:#ffffff; --success:#84cc16; --warning:#fbbf24; --danger:#f87171; --info:#06b6d4;
+}
+
+/* Sky Blue - Calming sky blue tones */
+html[data-theme="sky-blue"]{ 
+  --bg:#f0f9ff; --card:#ffffff; --border:#bae6fd; --muted:#e0f2fe; --muted-foreground:#0c4a6e; --text:#0369a1; --primary:#0284c7; --primary-foreground:#ffffff; --success:#10b981; --warning:#f59e0b; --danger:#ef4444; --info:#3b82f6;
+}
+
+/* Rose Light - Soft pink and coral */
+html[data-theme="rose-light"]{ 
+  --bg:#fff1f5; --card:#ffffff; --border:#fbcfe8; --muted:#ffe4e6; --muted-foreground:#831843; --text:#be185d; --primary:#ec4899; --primary-foreground:#ffffff; --success:#10b981; --warning:#f59e0b; --danger:#ef5350; --info:#06b6d4;
+}
+
+/* Amber Warmth - Golden amber and warm beige */
+html[data-theme="amber-warmth"]{ 
+  --bg:#fffbeb; --card:#ffffff; --border:#fde68a; --muted:#fef9c3; --muted-foreground:#78350f; --text:#b45309; --primary:#d97706; --primary-foreground:#ffffff; --success:#84cc16; --warning:#facc15; --danger:#f97316; --info:#0891b2;
+}
+
+/* Teal Fresh - Teal and mint green */
+html[data-theme="teal-fresh"]{ 
+  --bg:#f0fdfa; --card:#ffffff; --border:#ccfbf1; --muted:#d1fae5; --muted-foreground:#134e4a; --text:#0d9488; --primary:#14b8a6; --primary-foreground:#ffffff; --success:#10b981; --warning:#fbbf24; --danger:#ef4444; --info:#0284c7;
+}
+
+/* Indigo Professional - Deep indigo light version */
+html[data-theme="indigo-pro"]{ 
+  --bg:#eef2ff; --card:#ffffff; --border:#c7d2fe; --muted:#e0e7ff; --muted-foreground:#3730a3; --text:#4f46e5; --primary:#6366f1; --primary-foreground:#ffffff; --success:#10b981; --warning:#f59e0b; --danger:#ef4444; --info:#06b6d4;
+}
+
+/* Cyan Light - Bright cyan and turquoise */
+html[data-theme="cyan-light"]{ 
+  --bg:#ecf9ff; --card:#ffffff; --border:#a5f3fc; --muted:#cffafe; --muted-foreground:#06566b; --text:#0891b2; --primary:#06b6d4; --primary-foreground:#ffffff; --success:#22c55e; --warning:#fbbf24; --danger:#f87171; --info:#3b82f6;
+}
+
+/* Lime Fresh - Bright lime green */
+html[data-theme="lime-fresh"]{ 
+  --bg:#f7fee7; --card:#ffffff; --border:#d4fc79; --muted:#ecf821; --muted-foreground:#365314; --text:#84cc16; --primary:#a3e635; --primary-foreground:#ffffff; --success:#10b981; --warning:#fbbf24; --danger:#f87171; --info:#06b6d4;
+}
+
+/* Fuchsia Bold - Vibrant fuchsia and pink */
+html[data-theme="fuchsia-bold"]{ 
+  --bg:#fdf4ff; --card:#ffffff; --border:#f5d4f9; --muted:#fae8ff; --muted-foreground:#711c75; --text:#d946ef; --primary:#d946ef; --primary-foreground:#ffffff; --success:#10b981; --warning:#f59e0b; --danger:#ef4444; --info:#0284c7;
+}
+
+/* Orange Vibrant - Vibrant orange and gold */
+html[data-theme="orange-vibrant"]{ 
+  --bg:#fff4f2; --card:#ffffff; --border:#fcc1b3; --muted:#fed7aa; --muted-foreground:#7c2d12; --text:#ea580c; --primary:#ff6b35; --primary-foreground:#ffffff; --success:#22c55e; --warning:#facc15; --danger:#ef4444; --info:#06b6d4;
+}
+
+/* ========== DESIGN VARIATION THEMES (Colors only, no design vars) ========== */
+
+/* Glassmorphism Modern - Frosted glass effect with blur */
+html[data-design-theme="glass-modern"]{
+  --design-type: "glass";
+  --btn-radius: 12px;
+  --card-radius: 16px;
+  --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --btn-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Neumorphic Soft - Soft UI with subtle shadows and elevation */
+html[data-design-theme="neumorphic-soft"]{
+  --design-type: "neumorphic";
+  --btn-radius: 20px;
+  --card-radius: 25px;
+  --card-shadow: 9px 9px 16px rgba(0, 0, 0, 0.1), -9px -9px 16px rgba(255, 255, 255, 0.7);
+  --btn-shadow: 5px 5px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Gradient Bold - Vibrant gradients and modern design */
+html[data-design-theme="gradient-bold"]{
+  --design-type: "gradient";
+  --btn-radius: 8px;
+  --card-radius: 12px;
+  --card-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  --btn-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Brutalist Sharp - Sharp edges, bold typography, minimal design */
+html[data-design-theme="brutalist-sharp"]{
+  --design-type: "brutalist";
+  --btn-radius: 0px;
+  --card-radius: 0px;
+  --card-shadow: 8px 8px 0px rgba(0, 0, 0, 0.15);
+  --btn-shadow: 4px 4px 0px rgba(0, 0, 0, 0.15);
+}
+
+/* Minimalist Clean - Ultra-minimal with focus on content */
+html[data-design-theme="minimalist-clean"]{
+  --design-type: "minimal";
+  --btn-radius: 4px;
+  --card-radius: 4px;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --btn-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+/* Retro Neon - 80s retro with neon colors and bold fonts */
+html[data-design-theme="retro-neon"]{
+  --design-type: "retro";
+  --btn-radius: 0px;
+  --card-radius: 2px;
+  --card-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3);
+  --btn-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3);
+}
+
+/* Material Design 3 - Google's Material You with rounded corners */
+html[data-design-theme="material-design"]{
+  --design-type: "material";
+  --btn-radius: 100px;
+  --card-radius: 12px;
+  --card-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+  --btn-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* Basic controls - Default (Modern) */
+.btn{ display:inline-flex; align-items:center; gap:.5rem; padding:.5rem .75rem; border-radius:var(--btn-radius, .5rem); font-weight:600; border:0; background:var(--muted); color:var(--text); cursor:pointer; transition: all 0.2s ease; }
+.btn:hover{ transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.15); }
 .btn-primary{ background:var(--primary); color:var(--primary-foreground); }
+.btn-primary:hover{ box-shadow: 0 4px 16px color-mix(in srgb, var(--primary) 50%, transparent); }
 .btn-danger{ background:var(--danger); color:#ffffff; }
 .btn-danger:hover{ box-shadow: 0 8px 20px color-mix(in srgb, var(--danger) 40%, transparent); transform: translateY(-2px); }
-.input{ width:100%; padding:.5rem .75rem; border-radius:.5rem; border:1px solid var(--border); background:var(--card); color:var(--text); }
+.input{ width:100%; padding:.5rem .75rem; border-radius:var(--btn-radius, .5rem); border:1px solid var(--border); background:var(--card); color:var(--text); }
 .input:focus{ outline:none; border-color:var(--primary); box-shadow:0 0 0 3px color-mix(in srgb, var(--primary) 30%, transparent); }
 
 /* Cards / Tables */
-.card{ border-radius:.75rem; background:var(--card); border:1px solid var(--border); box-shadow:0 1px 2px rgba(0,0,0,.04); }
+.card{ border-radius:var(--card-radius, .75rem); background:var(--card); border:1px solid var(--border); box-shadow:var(--card-shadow, 0 1px 2px rgba(0,0,0,.04)); }
 .table th{ text-align:left; font-size:.875rem; font-weight:700; color:var(--muted-foreground); padding:.5rem; border-bottom:1px solid var(--border); }
 .table td{ padding:.5rem; border-bottom:1px solid var(--border); color:var(--text); }
 .hover-row:hover{ background:color-mix(in srgb, var(--muted) 50%, transparent); }
+
+/* ========== DESIGN THEME COMPREHENSIVE CSS ========== */
+
+/* GLASSMORPHISM MODERN */
+html[data-design-theme="glass-modern"] .btn {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+html[data-design-theme="glass-modern"] .btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+html[data-design-theme="glass-modern"] .btn-primary {
+  background: color-mix(in srgb, var(--primary) 80%, rgba(255, 255, 255, 0.3));
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--primary);
+  color: var(--primary-foreground);
+}
+
+html[data-design-theme="glass-modern"] .btn-primary:hover {
+  background: color-mix(in srgb, var(--primary) 90%, rgba(255, 255, 255, 0.3));
+}
+
+html[data-design-theme="glass-modern"] .btn-danger {
+  background: color-mix(in srgb, var(--danger) 70%, rgba(255, 255, 255, 0.3));
+  border: 1px solid var(--danger);
+  color: #ffffff;
+}
+
+html[data-design-theme="glass-modern"] .card {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+html[data-design-theme="glass-modern"] .input {
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+html[data-design-theme="glass-modern"] .table th,
+html[data-design-theme="glass-modern"] .table td {
+  padding: 0.75rem;
+}
+
+/* NEUMORPHIC SOFT */
+html[data-design-theme="neumorphic-soft"] .btn {
+  background: var(--card);
+  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.1), -8px -8px 16px rgba(255, 255, 255, 0.7);
+  border: none;
+  border-radius: 20px;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+}
+
+html[data-design-theme="neumorphic-soft"] .btn:hover {
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.1), inset -4px -4px 8px rgba(255, 255, 255, 0.7);
+}
+
+html[data-design-theme="neumorphic-soft"] .btn-primary {
+  background: var(--primary);
+  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.15), -8px -8px 16px rgba(255, 255, 255, 0.7);
+  color: var(--primary-foreground);
+}
+
+html[data-design-theme="neumorphic-soft"] .btn-primary:hover {
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+html[data-design-theme="neumorphic-soft"] .btn-danger {
+  background: var(--danger);
+  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.15), -8px -8px 16px rgba(255, 255, 255, 0.7);
+  color: #ffffff;
+}
+
+html[data-design-theme="neumorphic-soft"] .card {
+  background: var(--card);
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.12), -10px -10px 20px rgba(255, 255, 255, 0.8);
+  border: none;
+}
+
+html[data-design-theme="neumorphic-soft"] .input {
+  background: var(--card);
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.1), inset -4px -4px 8px rgba(255, 255, 255, 0.7);
+  border: none;
+  padding: 0.75rem;
+}
+
+html[data-design-theme="neumorphic-soft"] .table th,
+html[data-design-theme="neumorphic-soft"] .table td {
+  padding: 0.75rem;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* GRADIENT BOLD */
+html[data-design-theme="gradient-bold"] .btn {
+  background: linear-gradient(135deg, var(--primary) 0%, color-mix(in srgb, var(--primary) 70%, #000) 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  border: none;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  color: #ffffff;
+}
+
+html[data-design-theme="gradient-bold"] .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+}
+
+html[data-design-theme="gradient-bold"] .btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, color-mix(in srgb, var(--primary) 60%, #000) 100%);
+}
+
+html[data-design-theme="gradient-bold"] .btn-danger {
+  background: linear-gradient(135deg, var(--danger) 0%, color-mix(in srgb, var(--danger) 60%, #000) 100%);
+}
+
+html[data-design-theme="gradient-bold"] .card {
+  background: linear-gradient(135deg, var(--card) 0%, color-mix(in srgb, var(--card) 90%, var(--primary)) 100%);
+  border: 2px solid var(--primary);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+html[data-design-theme="gradient-bold"] .input {
+  background: linear-gradient(to bottom, var(--card), color-mix(in srgb, var(--card) 95%, var(--primary)));
+  border: 2px solid var(--primary);
+  padding: 0.75rem;
+}
+
+/* BRUTALIST SHARP */
+html[data-design-theme="brutalist-sharp"] .btn {
+  background: var(--text);
+  border: 3px solid var(--text);
+  color: var(--card);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0;
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.2);
+}
+
+html[data-design-theme="brutalist-sharp"] .btn:hover {
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 3px 3px 0px var(--text);
+  transform: translateX(-1px) translateY(-1px);
+}
+
+html[data-design-theme="brutalist-sharp"] .btn-primary {
+  background: var(--primary);
+  border: 3px solid var(--primary);
+  color: #ffffff;
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.3);
+}
+
+html[data-design-theme="brutalist-sharp"] .btn-danger {
+  background: var(--danger);
+  border: 3px solid var(--danger);
+  color: #ffffff;
+}
+
+html[data-design-theme="brutalist-sharp"] .card {
+  background: var(--card);
+  border: 3px solid var(--text);
+  box-shadow: 8px 8px 0px var(--text);
+  border-radius: 0;
+}
+
+html[data-design-theme="brutalist-sharp"] .input {
+  border: 3px solid var(--text);
+  box-shadow: inset 2px 2px 0px var(--border);
+  border-radius: 0;
+  padding: 0.75rem;
+}
+
+html[data-design-theme="brutalist-sharp"] .table th {
+  border: 3px solid var(--text);
+  border-bottom: 3px solid var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+html[data-design-theme="brutalist-sharp"] .table td {
+  border-bottom: 1px solid var(--text);
+}
+
+/* MINIMALIST CLEAN */
+html[data-design-theme="minimalist-clean"] .btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  box-shadow: none;
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+html[data-design-theme="minimalist-clean"] .btn:hover {
+  background: var(--muted);
+  border-color: var(--primary);
+  box-shadow: none;
+  transform: none;
+}
+
+html[data-design-theme="minimalist-clean"] .btn-primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border: 1px solid var(--primary);
+}
+
+html[data-design-theme="minimalist-clean"] .btn-primary:hover {
+  background: color-mix(in srgb, var(--primary) 90%, #000);
+  border-color: color-mix(in srgb, var(--primary) 90%, #000);
+}
+
+html[data-design-theme="minimalist-clean"] .btn-danger {
+  background: transparent;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
+
+html[data-design-theme="minimalist-clean"] .btn-danger:hover {
+  background: var(--danger);
+  color: #ffffff;
+}
+
+html[data-design-theme="minimalist-clean"] .card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: none;
+  border-radius: 4px;
+}
+
+html[data-design-theme="minimalist-clean"] .input {
+  background: var(--muted);
+  border: 1px solid var(--border);
+  box-shadow: none;
+  border-radius: 4px;
+}
+
+html[data-design-theme="minimalist-clean"] .input:focus {
+  border-color: var(--primary);
+  background: var(--card);
+}
+
+/* RETRO NEON */
+html[data-design-theme="retro-neon"] .btn {
+  background: var(--primary);
+  border: 2px solid var(--text);
+  box-shadow: 4px 4px 0px var(--text);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0;
+  color: #ffffff;
+}
+
+html[data-design-theme="retro-neon"] .btn:hover {
+  box-shadow: 2px 2px 0px var(--text), 0 0 20px var(--primary);
+  transform: translateX(2px) translateY(2px);
+}
+
+html[data-design-theme="retro-neon"] .btn-danger {
+  background: var(--danger);
+  color: #ffffff;
+}
+
+html[data-design-theme="retro-neon"] .card {
+  background: var(--card);
+  border: 2px dashed var(--primary);
+  box-shadow: 0 0 20px var(--primary);
+  border-radius: 0;
+}
+
+html[data-design-theme="retro-neon"] .input {
+  background: var(--muted);
+  border: 2px solid var(--text);
+  box-shadow: inset 0 0 10px var(--primary);
+  border-radius: 0;
+  padding: 0.75rem;
+}
+
+html[data-design-theme="retro-neon"] .table th {
+  border-bottom: 2px solid var(--text);
+  box-shadow: 0 3px 0px var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* MATERIAL DESIGN 3 */
+html[data-design-theme="material-design"] .btn {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 100px;
+  font-weight: 500;
+  padding: 0.625rem 1.5rem;
+  text-transform: capitalize;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+html[data-design-theme="material-design"] .btn:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+html[data-design-theme="material-design"] .btn-primary {
+  background: var(--primary);
+}
+
+html[data-design-theme="material-design"] .btn-danger {
+  background: var(--danger);
+  color: #ffffff;
+}
+
+html[data-design-theme="material-design"] .card {
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+  border: none;
+}
+
+html[data-design-theme="material-design"] .input {
+  background: var(--muted);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  padding: 0.75rem;
+}
+
+html[data-design-theme="material-design"] .table th {
+  background: var(--muted);
+  border-radius: 12px 12px 0 0;
+}
+
+html[data-design-theme="material-design"] .table td {
+  padding: 0.75rem;
+}
 
 /* Sales page table responsive scaling */
 .sales-table {
@@ -241,8 +719,37 @@ html[data-theme="slate"]{ --bg:#1a0a1f; --card:#2d1540; --border:#4a2566; --mute
 
 /* Badges */
 .badge{ font-size:.75rem; padding:.125rem .5rem; border-radius:999px; background:var(--muted); color:var(--text); }
-.badge-low{ background:color-mix(in srgb, var(--danger) 20%, var(--muted)); color:#fff; }
+.badge-low{ background:color-mix(in srgb, var(--danger) 20%, var(--muted)); color:#fff; display: inline-flex; align-items: center; gap: 0.25rem; }
+.badge-low i { width: 0.875rem; height: 0.875rem; }
 .badge-loss{ background:color-mix(in srgb, var(--danger) 20%, var(--muted)); color:#fff; }
+
+/* Responsive icon sizing for tables */
+[data-edit] i, [data-del] i, [data-filter] i {
+  width: 1rem;
+  height: 1rem;
+}
+
+@media (max-width: 640px) {
+  [data-edit] i, [data-del] i, [data-filter] i {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+  .badge-low i {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  [data-edit] i, [data-del] i, [data-filter] i {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+  .badge-low i {
+    width: 0.625rem;
+    height: 0.625rem;
+  }
+}
 
 /* Modal */
 .modal-backdrop {
@@ -719,3 +1226,15 @@ main {
 .animate-in {
   animation: slideIn 0.3s ease-out forwards;
 }
+
+/* Theme button active indicator */
+.theme-btn {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.theme-btn.active-theme {
+  box-shadow: 0 0 0 2px var(--primary), 0 0 0 4px var(--card);
+  transform: scale(1.05);
+}
+

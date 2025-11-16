@@ -62,6 +62,13 @@ CM.Views.Inventory.render = async function() {
 
   lucide.createIcons();
 
+  // Fetch stock threshold from database for low stock highlighting
+  let stockThreshold = 10;
+  CM.DB.getStockThreshold().then(threshold => {
+    stockThreshold = threshold;
+    render();
+  });
+
   function applySortFilter(data){
     let out = [...data];
     
@@ -87,6 +94,16 @@ CM.Views.Inventory.render = async function() {
       return sort.dir==='asc'? (A-B):(B-A);
     });
     return out;
+  }
+
+  async function render() {
+    // Re-render table with current data
+    const filteredData = applySortFilter(rowsCache || []);
+    const start = (state.page - 1) * state.itemsPerPage;
+    const end = start + state.itemsPerPage;
+    const paged = filteredData.slice(start, end);
+    renderTable(paged);
+    updatePageInfo();
   }
 
   async function loadAllForCache() {
@@ -140,7 +157,7 @@ CM.Views.Inventory.render = async function() {
             <td>${r.name}</td>
             <td>₹${r.purchasePrice}</td>
             <td>₹${r.sellingPrice}</td>
-            <td class="${r.stock<10?'text-[var(--danger)]':''}">${r.stock} ${r.stock<10?'<span class="badge badge-low ml-1">LOW</span>':''}</td>
+            <td class="${r.stock<stockThreshold?'text-[var(--danger)]':''}">${r.stock} ${r.stock<stockThreshold?'<span class="badge badge-low ml-1"><i data-lucide="alert-circle"></i></span>':''}</td>
             <td>
               <button class="icon-btn" data-edit="${r.id}"><i data-lucide="pencil"></i></button>
               <button class="icon-btn" data-del="${r.id}"><i data-lucide="trash"></i></button>
@@ -177,6 +194,12 @@ CM.Views.Inventory.render = async function() {
       btnNext.disabled = state.page === totalPages;
       
       lucide.createIcons();
+      
+      // Update icons based on current design theme
+      const currentDesign = localStorage.getItem("cm:designTheme") || "glass-modern";
+      if (CM.UI && CM.UI.updateIconsForDesignTheme) {
+        CM.UI.updateIconsForDesignTheme(currentDesign);
+      }
     });
   }
   render();

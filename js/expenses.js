@@ -94,7 +94,14 @@ CM.Views.Expenses.render = async function() {
     else if (rng==='week') [start,end] = CM.utils.weekRange();
     else if (rng==='month') [start,end] = CM.utils.monthRange();
     else if (rng==='year') [start,end] = CM.utils.yearRange();
-    else if (rng==='custom') { start=new Date(document.getElementById('fromDate').value); end=new Date(document.getElementById('toDate').value); if (!start||!end) return []; }
+    else if (rng==='custom') { 
+      const fromVal = document.getElementById('fromDate').value;
+      const toVal = document.getElementById('toDate').value;
+      if (!fromVal || !toVal) return [];
+      start = new Date(fromVal + 'T00:00:00');
+      end = new Date(toVal + 'T23:59:59');
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) return [];
+    }
 
     expensesCache = await CM.DB.listExpenses(rng==='all'? null : { start, end });
     const loadTime = (performance.now() - startTime).toFixed(2);
@@ -172,6 +179,12 @@ CM.Views.Expenses.render = async function() {
       exportRows = allExpenses.map(x=>({ Date:(x.date?.toDate? x.date.toDate(): new Date(x.date)).toLocaleDateString(), Description:x.description, Amount:x.amount }));
 
       lucide.createIcons();
+      
+      // Update icons based on current design theme
+      const currentDesign = localStorage.getItem("cm:designTheme") || "glass-modern";
+      if (CM.UI && CM.UI.updateIconsForDesignTheme) {
+        CM.UI.updateIconsForDesignTheme(currentDesign);
+      }
     });
   }
 
@@ -344,7 +357,7 @@ CM.Views.Expenses.render = async function() {
   document.getElementById('btnExport').addEventListener('click', async ()=> {
     try {
       await loadAllForCache();  // Wait for all data to load
-      CM.exporter.toXlsx('expenses.xlsx', exportRows);
+      CM.exporter.expensesToXlsx(exportRows);
       CM.UI.toast('Expenses exported successfully', 'success', 'Export Complete');
     } catch (err) {
       CM.UI.toast('Failed to export expenses', 'error', 'Export Failed');

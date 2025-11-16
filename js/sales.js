@@ -56,6 +56,29 @@ CM.Views.Sales.render = async function() {
           <button id="btnNextPage" class="btn btn-soft">Next<i data-lucide="chevron-right"></i></button>
         </div>
       </div>
+
+      <!-- Summary Card -->
+      <div class="card p-4">
+        <h3 class="text-sm font-semibold mb-4 text-[var(--text)]">Summary for ${state.range[0].toUpperCase()+state.range.slice(1)} Period</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="space-y-1">
+            <p class="text-xs font-medium text-[var(--muted-foreground)]">Total Sales</p>
+            <p class="text-lg font-bold text-[var(--text)]" id="summaryTotalSales">₹0.00</p>
+          </div>
+          <div class="space-y-1">
+            <p class="text-xs font-medium text-[var(--muted-foreground)]">COGS + Expenses</p>
+            <p class="text-lg font-bold text-[var(--text)]" id="summaryCogs">₹0.00</p>
+          </div>
+          <div class="space-y-1">
+            <p class="text-xs font-medium text-[var(--muted-foreground)]">Gross Profit</p>
+            <p class="text-lg font-bold text-[var(--text)]" id="summaryGrossProfit">₹0.00</p>
+          </div>
+          <div class="space-y-1">
+            <p class="text-xs font-medium text-[var(--muted-foreground)]">Net Profit</p>
+            <p class="text-lg font-bold text-[var(--primary)]" id="summaryNetProfit">₹0.00</p>
+          </div>
+        </div>
+      </div>
     </div>`;
 
   lucide.createIcons();
@@ -105,7 +128,14 @@ CM.Views.Sales.render = async function() {
     else if (rng==='week') [start,end] = CM.utils.weekRange();
     else if (rng==='month') [start,end] = CM.utils.monthRange();
     else if (rng==='year') [start,end] = CM.utils.yearRange();
-    else if (rng==='custom') { start = new Date(document.getElementById('fromDate').value); end = new Date(document.getElementById('toDate').value); if (!start||!end) return []; }
+    else if (rng==='custom') { 
+      const fromVal = document.getElementById('fromDate').value;
+      const toVal = document.getElementById('toDate').value;
+      if (!fromVal || !toVal) return [];
+      start = new Date(fromVal + 'T00:00:00');
+      end = new Date(toVal + 'T23:59:59');
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) return [];
+    }
 
     const sales = await CM.DB.listSales(rng==='all'? null : { start, end });
     const loadTime = (performance.now() - startTime).toFixed(2);
@@ -157,6 +187,96 @@ CM.Views.Sales.render = async function() {
     });
     return sorted;
   }
+
+  async function calculateSummary(allSales) {
+    // Calculate summary metrics
+    let totalSales = 0;
+    let totalCogs = 0;
+    
+    allSales.forEach(s => {
+      totalSales += s.totalAmount || 0;
+      totalCogs += s.totalCost || 0;
+    });
+
+    const grossProfit = totalSales - totalCogs;
+
+    // Get expenses for the current date range
+    let rangeExpenses = 0;
+    try {
+      const now = new Date();
+      let fromDate = new Date();
+      
+      if (state.range === 'today') {
+        fromDate.setHours(0, 0, 0, 0);
+      } else if (state.range === 'week') {
+        const d = now.getDate();
+        const day = now.getDay();
+        const diff = d - day;
+        fromDate = new Date(now.setDate(diff));
+        fromDate.setHours(0, 0, 0, 0);
+      } else if (state.range === 'month') {
+        fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      } else if (state.range === 'year') {
+        fromDate = new Date(now.getFullYear(), 0, 1);
+      } else if (state.range === 'custom') {
+        const fromEl = document.getElementById('fromDate');
+        const toEl = document.getElementById('toDate');
+        if (fromEl.value && toEl.value) {
+          fromDate = new Date(fromEl.value + 'T00:00:00');
+          const toDate = new Date(toEl.value + 'T23:59:59');
+          if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) return;
+          now = toDate;
+        }
+      }
+
+      const expenses = await CM.DB.listExpenses('all');
+      expenses.forEach(exp => {
+        const expDate = exp.date?.toDate ? exp.date.toDate() : new Date(exp.date);
+        if (expDate >= fromDate && expDate <= now) {
+          rangeExpenses += exp.amount || 0;
+        }
+      });
+    } catch (e) {
+      console.log('Error fetching expenses:', e);
+    }
+
+    const expensesPlusCogs = rangeExpenses + totalCogs;
+    const netProfit = totalSales - expensesPlusCogs;
+
+    return { totalSales, totalCogs, grossProfit, rangeExpenses, expensesPlusCogs, netProfit };
+  }
+
+  async function updateSummaryCard(allSales) {
+    const summary = await calculateSummary(allSales);
+    const { totalSales, expensesPlusCogs, grossProfit, netProfit } = summary;
+
+    // Update UI elements
+    const totalSalesEl = document.getElementById('summaryTotalSales');
+    const cogsEl = document.getElementById('summaryCogs');
+    const grossProfitEl = document.getElementById('summaryGrossProfit');
+    const netProfitEl = document.getElementById('summaryNetProfit');
+
+    if (totalSalesEl) {
+      totalSalesEl.textContent = CM.utils.fmtINR(totalSales);
+      totalSalesEl.className = 'text-lg font-bold text-[var(--text)]';
+    }
+    if (cogsEl) {
+      cogsEl.textContent = CM.utils.fmtINR(expensesPlusCogs);
+      cogsEl.className = `text-lg font-bold ${expensesPlusCogs > 0 ? 'text-red-600' : 'text-[var(--text)]'}`;
+    }
+    if (grossProfitEl) {
+      grossProfitEl.textContent = CM.utils.fmtINR(grossProfit);
+      grossProfitEl.className = `text-lg font-bold ${grossProfit < 0 ? 'text-red-600' : 'text-green-600'}`;
+    }
+    if (netProfitEl) {
+      netProfitEl.textContent = CM.utils.fmtINR(netProfit);
+      netProfitEl.className = `text-lg font-bold ${netProfit < 0 ? 'text-red-600' : 'text-green-600'}`;
+    }
+
+    console.log('📊 Summary Card Updated:', summary);
+  }
+
+  let summaryForExport = {};
 
   function renderPage() {
     // Start loading in background
@@ -277,6 +397,9 @@ CM.Views.Sales.render = async function() {
         _itemsData: s.items || []  // Raw items data for mini table in export
       }));
 
+      // Update summary card
+      updateSummaryCard(allSales);
+
       // Attach expand button listeners
       body.querySelectorAll('.expand-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -287,6 +410,12 @@ CM.Views.Sales.render = async function() {
       });
 
       lucide.createIcons();
+      
+      // Update icons based on current design theme
+      const currentDesign = localStorage.getItem("cm:designTheme") || "glass-modern";
+      if (CM.UI && CM.UI.updateIconsForDesignTheme) {
+        CM.UI.updateIconsForDesignTheme(currentDesign);
+      }
     });
   }
 
@@ -325,8 +454,9 @@ CM.Views.Sales.render = async function() {
   document.getElementById('btnExport').addEventListener('click', async ()=> {
     try {
       // Wait for all data to load before exporting
-      await loadAllForExport();
-      CM.exporter.salesToXlsx(exportRows);
+      const allSales = await loadAllForExport();
+      summaryForExport = await calculateSummary(allSales);
+      CM.exporter.salesToXlsx(exportRows, summaryForExport);
       CM.UI.toast('Sales data exported successfully', 'success', 'Export Complete');
     } catch (err) {
       CM.UI.toast('Failed to export sales data', 'error', 'Export Failed');

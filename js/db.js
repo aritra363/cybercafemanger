@@ -49,6 +49,30 @@ CM.DB = (() => {
     await fire.updateDoc(fire.doc(db,'expenses', id), updates);
   }
 
+  async function getStockThreshold() {
+    await waitReady(); const { db, fire } = CM.firebase;
+    try {
+      const docRef = fire.doc(db, 'settings', 'stockThreshold');
+      const snap = await fire.getDoc(docRef);
+      return snap.exists() ? snap.data().value : 10;
+    } catch (e) {
+      console.warn('Error fetching stock threshold:', e);
+      return 10;
+    }
+  }
+
+  async function setStockThreshold(value) {
+    await waitReady(); const { db, fire } = CM.firebase;
+    try {
+      const docRef = fire.doc(db, 'settings', 'stockThreshold');
+      await fire.setDoc(docRef, { value }, { merge: true });
+      return value;
+    } catch (e) {
+      console.error('Error saving stock threshold:', e);
+      throw e;
+    }
+  }
+
   async function addSale(sale, itemDeltas) {
     await waitReady(); const { db, fire } = CM.firebase;
     // Batch: create sale and update stocks atomically
@@ -72,5 +96,5 @@ CM.DB = (() => {
     return snap.docs.map(d => ({ id:d.id, ...d.data() }));
   }
 
-  return { addInventory, updateInventory, deleteInventory, listInventory, addExpense, listExpenses, deleteExpense, updateExpense, addSale, listSales };
+  return { addInventory, updateInventory, deleteInventory, listInventory, addExpense, listExpenses, deleteExpense, updateExpense, addSale, listSales, getStockThreshold, setStockThreshold };
 })();

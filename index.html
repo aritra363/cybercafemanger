@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="ocean-light">
+<html lang="en" data-theme="sunset" data-design-theme="glass-modern">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -54,14 +54,35 @@
 
       <div class="mt-auto p-3 space-y-3">
         <div>
-          <div class="text-xs mb-2 opacity-70">Theme</div>
-          <div class="grid grid-cols-3 gap-2">
-            <button class="theme-btn" data-theme="ocean-light">Ocean L</button>
-            <button class="theme-btn" data-theme="ocean-dark">Ocean D</button>
-            <button class="theme-btn" data-theme="emerald">Emerald</button>
-            <button class="theme-btn" data-theme="sunset">Sunset</button>
-            <button class="theme-btn" data-theme="violet">Violet</button>
-            <button class="theme-btn" data-theme="slate">Neon</button>
+          <div class="text-xs mb-2 opacity-70">Light Themes</div>
+          <div class="grid grid-cols-3 gap-1 text-xs">
+            <button class="theme-btn color-theme-btn py-1" data-theme="ocean-light">Ocean L</button>
+            <button class="theme-btn color-theme-btn py-1" data-theme="emerald">Emerald</button>
+            <button class="theme-btn color-theme-btn py-1 active-theme" data-theme="sunset">Sunset</button>
+            <button class="theme-btn color-theme-btn py-1" data-theme="violet">Violet</button>
+            <button class="theme-btn color-theme-btn py-1" data-theme="sky-blue">Sky</button>
+            <button class="theme-btn color-theme-btn py-1" data-theme="rose-light">Rose</button>
+            <button class="theme-btn color-theme-btn py-1" data-theme="amber-warmth">Amber</button>
+            <button class="theme-btn color-theme-btn py-1" data-theme="teal-fresh">Teal</button>
+            <button class="theme-btn color-theme-btn py-1" data-theme="indigo-pro">Indigo</button>
+            <button class="theme-btn color-theme-btn py-1" data-theme="cyan-light">Cyan</button>
+            <button class="theme-btn color-theme-btn py-1" data-theme="lime-fresh">Lime</button>
+            <button class="theme-btn color-theme-btn py-1" data-theme="fuchsia-bold">Fuchsia</button>
+            <button class="theme-btn color-theme-btn py-1" data-theme="orange-vibrant">Orange</button>
+            <button class="theme-btn color-theme-btn py-1" data-theme="ocean-dark">🌙 Dark</button>
+            <button class="theme-btn color-theme-btn py-1" data-theme="slate">🌙 Neon</button>
+          </div>
+        </div>
+        <div>
+          <div class="text-xs mb-2 opacity-70">Design Themes</div>
+          <div class="grid grid-cols-3 gap-1 text-xs">
+            <button class="theme-btn design-theme-btn py-1 active-theme" data-theme="glass-modern">Glass</button>
+            <button class="theme-btn design-theme-btn py-1" data-theme="neumorphic-soft">Neumorphic</button>
+            <button class="theme-btn design-theme-btn py-1" data-theme="gradient-bold">Gradient</button>
+            <button class="theme-btn design-theme-btn py-1" data-theme="brutalist-sharp">Brutalist</button>
+            <button class="theme-btn design-theme-btn py-1" data-theme="minimalist-clean">Minimal</button>
+            <button class="theme-btn design-theme-btn py-1" data-theme="retro-neon">Retro</button>
+            <button class="theme-btn design-theme-btn py-1" data-theme="material-design">Material</button>
           </div>
         </div>
         <div class="text-xs text-[var(--muted-foreground)]">v1.0 — Built for Indian Cyber Cafes</div>

@@ -4,9 +4,9 @@ CM.State = {
   route: 'dashboard',
   theme: localStorage.getItem('cm:theme') || 'ocean-light',
   filters: {
-    dashboard: { range: 'month', custom: null },
-    sales:     { range: 'month', custom: null },
-    expenses:  { range: 'month', custom: null }
+    dashboard: { range: 'today', custom: null },
+    sales:     { range: 'today', custom: null },
+    expenses:  { range: 'today', custom: null }
   },
   cart: { items: [] },
 };
